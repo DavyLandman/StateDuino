@@ -1,0 +1,20 @@
+StateMachine HandleButton(int buttonID)
+
+InitializeHandleButton => HasButtonCheckTimePassed?
+
+HasButtonCheckTimePassed? 
+	yes => !IsButtonHigh?
+		yes => FireFirstAction
+		no => HasButtonCheckTimePassed?
+
+FireFirstAction => StartButtonHeldCounter 
+
+StartButtonHeldCounter => HasButtonHeldTimePassed?
+
+HasButtonHeldTimePassed?
+	yes => !ButtonStillHigh?
+		yes => FireAction => StartButtonHeldCounter
+		no => HasButtonCheckTimePassed?
+	no => !ButtonStillHigh?
+		yes => HasButtonHeldTimePassed?
+		no => HasButtonCheckTimePassed?
