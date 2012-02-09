@@ -1,0 +1,21 @@
+StateMachine Temperature
+
+InitializeTemperatureMeasurement => ShouldStartMeasurement?
+
+ShouldStartMeasurement?
+	yes => InitializeSmoothing
+	no => ShouldStartMeasurement?
+	
+InitializeSmoothing => ShouldSmooth?
+
+ShouldSmooth?
+	yes => !EnoughSamplesCollected?
+	no => ShouldSmooth?
+	
+!EnoughSamplesCollected?
+	yes => FillSharedState
+	no => SampleTemperature
+	
+SampleTemperature => PrepareNextSmoothStep => ShouldSmooth?
+
+FillSharedState => PrepareNextMeasurementRound => ShouldStartMeasurement?

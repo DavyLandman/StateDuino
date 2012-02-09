@@ -1,0 +1,16 @@
+StateMachine ButtonDebounce(int buttonPort)
+
+InitializeButtonDebounce => ButtonPressed?
+
+ButtonPressed?
+	yes => StartDebounceCounter => IsDebounceTimePassed?
+
+IsDebounceTimePassed?
+	yes => !IsButtonStillHigh?
+
+!IsButtonStillHigh? 
+	yes => MarkButtonPressed => ButtonUnpressed?
+	no => ButtonPressed?
+	
+ButtonUnpressed?
+	yes => MarkButtonUnpressed =>  ButtonPressed?
