@@ -1,0 +1,22 @@
+StateMachine Ethernet
+
+InitializeEthernetCommunication => ShouldStartCommunication?
+
+ShouldStartCommunication?
+	yes => WakeUpEthernet => InitializeTemperatureSending => WasTemperatureSend?
+	
+WasTemperatureSend?
+	! => RecvAndSendPackets // always execute RecvAndSendPackets
+	yes => InitializeScheduleReceiving => WasScheduleReceived?
+	no => !TemperatureSendingTimeoutPassed?
+		yes => PowerDownEthernet
+		no => WasTemperatureSend?
+		
+WasScheduleReceived?
+	! => RecvAndSendPackets // always execute RecvAndSendPackets
+	yes => FillSharedState => PowerDownEthernet
+	no => !ScheduleReceivingTimeoutPassed?
+		yes => PowerDownEthernet
+		no => WasScheduleReceived?
+
+PowerDownEthernet => InitializeNextCommunicationRound => ShouldStartCommunication?
