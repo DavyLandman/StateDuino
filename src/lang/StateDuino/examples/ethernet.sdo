@@ -2,21 +2,26 @@ StateMachine Ethernet
 
 InitializeEthernetCommunication => ShouldStartCommunication?
 
-ShouldStartCommunication?
+ShouldStartCommunication? {
 	yes => WakeUpEthernet => InitializeTemperatureSending => WasTemperatureSend?
+}
 	
-WasTemperatureSend?
+WasTemperatureSend? {
 	! => RecvAndSendPackets // always execute RecvAndSendPackets
 	yes => InitializeScheduleReceiving => WasScheduleReceived?
-	no => !TemperatureSendingTimeoutPassed?
+	no => !TemperatureSendingTimeoutPassed? {
 		yes => PowerDownEthernet
 		no => WasTemperatureSend?
+	}
+}
 		
-WasScheduleReceived?
+WasScheduleReceived? {
 	! => RecvAndSendPackets // always execute RecvAndSendPackets
 	yes => FillSharedState => PowerDownEthernet
-	no => !ScheduleReceivingTimeoutPassed?
+	no => !ScheduleReceivingTimeoutPassed? {
 		yes => PowerDownEthernet
 		no => WasScheduleReceived?
+	}
+}
 
 PowerDownEthernet => InitializeNextCommunicationRound => ShouldStartCommunication?

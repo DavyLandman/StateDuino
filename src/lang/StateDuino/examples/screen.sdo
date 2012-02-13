@@ -2,23 +2,28 @@ StateMachine Screen
 
 InitializeScreenRendering => ShouldScreenWakeUp?
 
-ShouldScreenWakeUp?
+ShouldScreenWakeUp? {
 	yes => WakeScreen => DrawScreen
+}
 	
 DrawScreen => WriteCurrentTime => !IsUpdatingTemperatureFirstLine?
 
-!IsUpdatingTemperatureFirstLine?
+!IsUpdatingTemperatureFirstLine? {
 	yes => WriteUpdateTemperatureIcon => WriteTemperature
 	no => FillLineWithSpaces => WriteTemperature
+}
 
 WriteTemperature => !IsUpdatingTemperatureSecondLine?
 
-!IsUpdatingTemperatureSecondLine? 
+!IsUpdatingTemperatureSecondLine? {
 	yes => WriteNewScheduleAndTemperature => ShouldRedraw?
 	no => WriteCurrentScheduleAndTemperature  => ShouldRedraw?
+}
 	
-ShouldRedraw?
+ShouldRedraw? {
 	yes => DrawScreen
-	no => !ShouldSleep? 
+	no => !ShouldSleep? {
 		yes => ShouldScreenWakeUp?
 		no => ShouldRedraw?
+	}
+}

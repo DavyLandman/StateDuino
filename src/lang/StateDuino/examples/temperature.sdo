@@ -2,19 +2,22 @@ StateMachine Temperature
 
 InitializeTemperatureMeasurement => ShouldStartMeasurement?
 
-ShouldStartMeasurement?
+ShouldStartMeasurement? {
 	yes => InitializeSmoothing
 	no => ShouldStartMeasurement?
+}
 	
 InitializeSmoothing => ShouldSmooth?
 
-ShouldSmooth?
+ShouldSmooth? {
 	yes => !EnoughSamplesCollected?
 	no => ShouldSmooth?
+}
 	
-!EnoughSamplesCollected?
+!EnoughSamplesCollected? {
 	yes => FillSharedState
 	no => SampleTemperature
+}
 	
 SampleTemperature => PrepareNextSmoothStep => ShouldSmooth?
 
