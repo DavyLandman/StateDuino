@@ -11,30 +11,32 @@ syntax StateMachineIdentifier
 	
 syntax Parameter = Type type Name name;
 
-lexical Name = [a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-] \ ForkAnswers;
+lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]) \ ForkAnswers;
 
 keyword Type = "int" | "bool";
-keyword ForkAnswers = "yes" | "no";
+keyword ForkAnswers = "yes" | "no" | "#";
 keyword ImportantMarkings = "!" | "?" | "=\>";
 
-lexical StateName = Name name !>> "?";
+lexical ActionName = Name name !>> "?";
 
 lexical ForkName 
 	= normalFork: "!" !<< Name name "?" !>> "?"
 	| nonBlockingFork: "!" Name name "?" !>> "?"
 	;
-
 syntax StateTransition
-	= startState : StateName fromState "=\>" StateTransition toStateTransition
-	| forkDescription: ForkName ForkAnswerTransition+ forkAnswers
-	> singleState : StateName state !>> "=\>"
-	> singleFork : ForkName fork !>> "yes"
+	= actionChain : ActionName from "=\>" StateTransition to
+	| forkDescription: ForkName name "{" ForkConditionTransitions+ transitions  "}"
+	> singleAction : ActionName state 
+	> singleFork : ForkName fork 
 	; 
 	
-syntax ForkAnswerTransition = ForkAnswer answer StateTransition transitions;
-
-lexical ForkAnswer 
-	= yes: [\ \t] !<< [\ \t]+ !>> [\ \t] indent "yes" [\ \t]* "=\>"
-	| no: [\ \t] !<< [\ \t]+ !>> [\ \t] indent "no" [\ \t]* "=\>"
+syntax ForkConditionTransitions
+	= action: ForkCondition answer StateTransition transitions
+	| sleepableLoop: ForkCondition answer "#"
 	;
-	
+
+syntax ForkCondition
+	= yes: "yes" "=\>"
+	| no: "no" "=\>"
+	| always: "!" "=\>"
+	;
