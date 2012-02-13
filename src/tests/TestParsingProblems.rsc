@@ -1,4 +1,4 @@
-module lang::StateDuino::cst::TestParsingProblems
+module tests::TestParsingProblems
 
 import FileSystem;
 import lang::StateDuino::cst::Parse;
