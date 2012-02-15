@@ -9,7 +9,9 @@ syntax StateMachineIdentifier
 	| parameterized: Name name "(" {Parameter ","}+ params")"
 	;
 	
-syntax Parameter = param: Name type Name name;
+syntax Parameter = param: TypeName type ParamName name;
+lexical ParamName = @category="MetaVariable" Name;
+lexical TypeName = @category="Type" Name;
 
 lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]) \ ForkAnswers;
 
