@@ -10,10 +10,11 @@ syntax StateMachineIdentifier
 	;
 	
 syntax Parameter = param: Type type Name name;
+lexical Type = "int" | "bool";
 
 lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]) \ ForkAnswers;
 
-keyword Type = "int" | "bool";
+keyword TypeKeyword = Type;
 keyword ForkAnswers = "yes" | "no";
 keyword ImportantMarkings = "!" | "?" | "=\>";
 

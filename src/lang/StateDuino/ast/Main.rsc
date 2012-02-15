@@ -12,9 +12,15 @@ data Parameter = param(str \type, str name);
 
 data StateTransition 
 	= singleAction(str action)
-	| singleFork(str name)
+	| singleFork(ForkName name)
 	| actionChain(str from, StateTransition to)
-	| forkDescription(str name, list[ForkConditionTransitions] transitions)
+	| forkDescription(ForkName name, list[ForkConditionTransitions] transitions)
+	;
+
+data ForkName
+	= normalFork(str name)
+	| sleepableFork(str name)
+	| nonBlockingFork(str name)
 	;
 	
 data ForkConditionTransitions
