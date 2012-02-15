@@ -5,6 +5,7 @@ import lang::StateDuino::cst::Parse;
 import IO;
 import Set;
 import ParseTree;
+import Exception;
 
 public test bool checkAll() {
 	return (size(checkAllAmbiguities()) == 0)
