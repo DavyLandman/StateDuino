@@ -8,13 +8,12 @@ data StateMachineIdentifier
 	;
 
 data Parameter = param(str \type, str name);
-//data Type = \int() | \bool();
 
 data StateTransition 
-	= singleAction(str action)
-	| singleFork(ForkName name)
-	| actionChain(str from, StateTransition to)
+	= action(str action)
+	| fork(ForkName name)
 	| forkDescription(ForkName name, list[ForkConditionTransitions] transitions)
+	| chain(StateTransition from, StateTransition to)
 	;
 
 data ForkName
@@ -25,7 +24,6 @@ data ForkName
 	
 data ForkConditionTransitions
 	= action(ForkCondition condition, StateTransition transitions)
-	| sleepableLoop(ForkCondition condition)
 	;
 	
 data ForkCondition = yes() | no() | always();

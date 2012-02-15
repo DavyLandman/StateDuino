@@ -9,14 +9,11 @@ syntax StateMachineIdentifier
 	| parameterized: Name name "(" {Parameter ","}+ params")"
 	;
 	
-syntax Parameter = param: Type type Name name;
-lexical Type = "int" | "bool";
+syntax Parameter = param: Name type Name name;
 
 lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]) \ ForkAnswers;
 
-keyword TypeKeyword = Type;
-keyword ForkAnswers = "yes" | "no";
-keyword ImportantMarkings = "!" | "?" | "=\>";
+keyword ForkAnswers = "yes" | "no" | "!";
 
 lexical ActionName = Name name;
 
@@ -27,10 +24,10 @@ lexical ForkName
 	;
 	
 syntax StateTransition
-	= actionChain : ActionName from "=\>" StateTransition to
+	= action : ActionName action 
+	| fork : ForkName name 
 	| forkDescription: ForkName name "{" ForkConditionTransitions+ transitions  "}"
-	> singleAction : ActionName action 
-	> singleFork : ForkName name 
+	> left chain : StateTransition from "=\>" StateTransition to
 	; 
 	
 syntax ForkConditionTransitions
