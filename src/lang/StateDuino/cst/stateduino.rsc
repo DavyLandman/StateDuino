@@ -26,7 +26,7 @@ lexical ForkName
 syntax StateTransition
 	= action : ActionName action 
 	| fork : ForkName name 
-	| @Foldable bracket forkDescription: ForkName name "{" ForkConditionTransitions+ transitions  "}" 
+	| @Foldable forkDescription: ForkName name "{" ForkConditionTransitions+ transitions  "}" 
 	> left chain : StateTransition from "=\>" StateTransition to
 	; 
 	
