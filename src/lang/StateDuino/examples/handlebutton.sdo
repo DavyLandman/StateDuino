@@ -1,13 +1,13 @@
 StateMachine HandleButton(int buttonID)
 
-InitializeHandleButton => HasButtonCheckTimePassed?
+InitializeHandleButton => #HasButtonCheckTimePassed?
 
-HasButtonCheckTimePassed? {
+// # in front of fork means you can sleep on this fork
+#HasButtonCheckTimePassed? {
 	yes => !IsButtonHigh? {
 		yes => FireFirstAction
-		no => HasButtonCheckTimePassed?
+		no => #HasButtonCheckTimePassed?
 	}
-	no => # // this signals a loop with possibility to sleep for a longer time
 }
 
 FireFirstAction => StartButtonHeldCounter 
@@ -17,10 +17,10 @@ StartButtonHeldCounter => HasButtonHeldTimePassed?
 HasButtonHeldTimePassed? {
 	yes => !ButtonStillHigh? {
 		yes => FireAction => StartButtonHeldCounter
-		no => HasButtonCheckTimePassed?
+		no => #HasButtonCheckTimePassed?
 	}
 	no => !ButtonStillHigh? {
 		yes => HasButtonHeldTimePassed?
-		no => HasButtonCheckTimePassed?
+		no => #HasButtonCheckTimePassed?
 	}
 }

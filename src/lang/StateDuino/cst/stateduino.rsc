@@ -14,13 +14,14 @@ syntax Parameter = param: Type type Name name;
 lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]) \ ForkAnswers;
 
 keyword Type = "int" | "bool";
-keyword ForkAnswers = "yes" | "no" | "#";
+keyword ForkAnswers = "yes" | "no";
 keyword ImportantMarkings = "!" | "?" | "=\>";
 
 lexical ActionName = Name name;
 
 lexical ForkName 
-	= normalFork: /*"!" !<<*/ Name name "?" 
+	= normalFork: Name name "?" 
+	| sleepableFork: "#" Name name "?"
 	| nonBlockingFork: "!" Name name "?"
 	;
 	
@@ -33,7 +34,6 @@ syntax StateTransition
 	
 syntax ForkConditionTransitions
 	= action: ForkCondition condition StateTransition transitions
-	| sleepableLoop: ForkCondition answer "#"
 	;
 
 syntax ForkCondition
