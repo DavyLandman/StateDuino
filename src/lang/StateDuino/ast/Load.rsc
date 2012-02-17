@@ -9,3 +9,6 @@ public StateMachine getStateMachine (str stateMachineString)
 
 public StateMachine getStateMachine (loc stateMachineFile) 
 	= implode(#StateMachine, parseStateMachine(stateMachineFile));
+
+public StateMachine getStateMachine (Tree stateMachineParsedTree) 
+	= implode(#StateMachine, stateMachineParsedTree);
