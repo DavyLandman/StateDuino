@@ -7,7 +7,7 @@ import Message;
 import Set;
 import lang::StateDuino::cst::Parse;
 import lang::StateDuino::ast::Load;
-import lang::StateDuino::ast::Checker;
+import lang::StateDuino::semantics::Checker;
 
 public void main() {
 	registerLanguage("The StateDuino language", "sdo", Tree (str s, loc l) {

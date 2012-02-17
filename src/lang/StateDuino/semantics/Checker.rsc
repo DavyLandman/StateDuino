@@ -1,4 +1,4 @@
-module lang::StateDuino::ast::Checker
+module lang::StateDuino::semantics::Checker
 
 import lang::StateDuino::ast::Main;
 import Message;
