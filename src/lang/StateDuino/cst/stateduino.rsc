@@ -10,7 +10,7 @@ syntax StateMachineIdentifier
 	;
 	
 syntax Parameter = param: TypeName type ParamName name;
-lexical ParamName = @category="MetaVariable" Name;
+lexical ParamName = @category="Variable" Name;
 lexical TypeName = @category="Type" Name;
 
 lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]) \ ForkAnswers;

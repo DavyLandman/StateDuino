@@ -3,6 +3,7 @@ module lang::StateDuino::cst::Parse
 import lang::StateDuino::cst::stateduino;
 import ParseTree;
 import util::IDE;
+import util::SyntaxHighlightingTemplates;
 
 public start[StateMachine] parseStateMachine(str stateDuinoString) = 
 	parse(#start[StateMachine], stateDuinoString);
@@ -15,4 +16,5 @@ public void registerIDE() {
 	registerLanguage("The StateDuino language", "sdo", start[StateMachine] (str s, loc l) {
 		return parse(#start[StateMachine], s, l); 
 	});
+	registerContributions("The StateDuino language", {getSolarizedLightCategories()});
 }
