@@ -5,13 +5,9 @@ import IO;
 import lang::StateDuino::ast::Main;
 import lang::StateDuino::semantics::Concepts;
 
-
-
-
 public set[Message] fastCheck(StateMachine sm) {
 	set[Message] result ={};
 	visit(sm) {
-		// check types
 		case p:param(str name, _) : 
 			if (! (name in validParameterTypes)) {
 				result += {error("Type <name> is not supported",p@location)};
