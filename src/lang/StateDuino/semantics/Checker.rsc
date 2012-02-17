@@ -13,7 +13,6 @@ public set[Message] fastCheck(StateMachine sm) {
 	visit(sm) {
 		case p:param(str name, _) : 
 			if (! (name in validParameterTypes)) {
-				println("found problem");
 				result += {error("Type <name> is not supported",p@location)};
 			}
 	};
