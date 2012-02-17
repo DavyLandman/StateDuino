@@ -1,4 +1,4 @@
-module lang::StateDuino::cst::stateduino
+module lang::StateDuino::cst::Syntax
 
 extend lang::std::Layout; // get comments and spaces layout for free
 
