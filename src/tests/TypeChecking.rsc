@@ -21,3 +21,31 @@ public test bool testInvalidTypes() {
 	}
 	return false;
 }
+
+public test bool testInvalidStateTransitionChain() {
+	set[Message] messages = runFastCheckOn("StateMachine Test T1=\>T2=\>T3?=\>T4");
+	if (size(messages) == 0) {
+		return false;	
+	}
+	if (error("A fork cannot be followed by another action or fork.", _) <- messages) {
+		return true;
+	}
+	return false;
+}
+public test bool testValidStateTransitionChain() {
+	set[Message] messages = runFastCheckOn("StateMachine Test T1=\>T2=\>T3?");
+	if (size(messages) == 0) {
+		return true;	
+	}
+	return false;
+}
+public test bool testInvalidStateTransitionChain2() {
+	set[Message] messages = runFastCheckOn("StateMachine Test T1=\>T2=\>T3? { yes =\> T5 } =\>T4");
+	if (size(messages) == 0) {
+		return false;	
+	}
+	if (error("A fork cannot be followed by another action or fork.", _) <- messages) {
+		return true;
+	}
+	return false;
+}
