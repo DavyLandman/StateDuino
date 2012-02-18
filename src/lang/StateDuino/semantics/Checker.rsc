@@ -12,14 +12,17 @@ public set[Message] fastCheck(StateMachine sm) {
 			if (! (name in validParameterTypes)) {
 				result += {error("Type <name> is not supported",p@location)};
 			}
-		case chain(chain(_,f:fork(_)), _) : 
-			result += getInvalidForkChainMessage(f);
-		case chain(chain(_,f:forkDescription(_,_)), _) : 
-			result += getInvalidForkChainMessage(f);
+		case c:chain(/fork(_), _) : 
+			result += getInvalidForkChainMessage(c);
+		case c:chain(/forkDescription(_,_), _) : 
+			result += getInvalidForkChainMessage(c);
 	};
 	return result;
 }
-
-private set[Message] getInvalidForkChainMessage(StateTransition st) {
-	return { error("A fork cannot be followed by another action or fork.", st@location)};
+//(left.offset, left.length + right.length + (right.offset - (left.offset + left.length)));
+private set[Message] getInvalidForkChainMessage(chain(StateTransition forkFrom, StateTransition to)) {
+	str m = "A fork cannot be followed by another action or fork.";
+	loc left = forkFrom@location;
+	loc right = to@location;	
+	return { error(m, left), error(m, right)};
 }
