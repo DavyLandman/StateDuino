@@ -13,9 +13,7 @@ syntax Parameter = param: TypeName type ParamName name;
 lexical ParamName = @category="Variable" Name;
 lexical TypeName = @category="Type" Name;
 
-lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]) \ ForkAnswers;
-
-keyword ForkAnswers = "yes" | "no" | "!";
+lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]);
 
 lexical ActionName = Name name;
 
@@ -33,12 +31,8 @@ syntax StateTransition
 	| @Foldable forkDescription: ForkName name "{" ForkConditionTransitions+ transitions  "}" 
 	; 
 	
-syntax ForkConditionTransitions
-	= action: ForkCondition condition StateTransitions transitions
-	;
+lexical ForkCondition = @category="MetaKeyword" ([a-zA-Z!] [a-zA-Z0-9_+\-!]* !>> [a-zA-Z0-9_+\-!]);
 
-syntax ForkCondition
-	= yes: "yes" "=\>"
-	| no: "no" "=\>"
-	| always: "!" "=\>"
+syntax ForkConditionTransitions
+	= action: ForkCondition condition "=\>" StateTransitions transitions
 	;

@@ -24,15 +24,13 @@ data ForkName
 	;
 	
 data ForkConditionTransitions
-	= action(ForkCondition condition, StateTransitions transitions)
+	= action(str condition, StateTransitions transitions)
 	;
 	
-data ForkCondition = yes() | no() | always();
-
 anno loc StateMachine@location;
 anno loc StateMachineIdentifier@location;
 anno loc Parameter@location;
+anno loc StateTransitions@location;
 anno loc StateTransition@location;
 anno loc ForkName@location;
 anno loc ForkConditionTransitions@location;
-anno loc ForkCondition@location;
