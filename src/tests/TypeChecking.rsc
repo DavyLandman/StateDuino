@@ -69,3 +69,13 @@ public test bool testInvalidStateTransitionChain4() {
 	}
 	return false;
 }
+public test bool testInvalidStateTransitionChain5() {
+	set[Message] messages = runFastCheckOn("StateMachine Test T3?=\>T4=\>T5");
+	if (size(messages) == 0) {
+		return false;	
+	}
+	if (error("A fork cannot be followed by another action or fork.", _) <- messages) {
+		return true;
+	}
+	return false;
+}

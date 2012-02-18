@@ -1,6 +1,6 @@
 module lang::StateDuino::ast::Main
 
-data StateMachine = stateMachine(StateMachineIdentifier name, list[StateTransition] transitions);
+data StateMachine = stateMachine(StateMachineIdentifier name, list[StateTransitions] transitions);
 
 data StateMachineIdentifier 
 	= normal(str name)
@@ -9,11 +9,12 @@ data StateMachineIdentifier
 
 data Parameter = param(str \type, str name);
 
+data StateTransitions = chain(list[StateTransition] transitions);
+
 data StateTransition 
 	= action(str action)
 	| fork(ForkName name)
 	| forkDescription(ForkName name, list[ForkConditionTransitions] transitions)
-	| chain(StateTransition from, StateTransition to)
 	;
 
 data ForkName
@@ -23,7 +24,7 @@ data ForkName
 	;
 	
 data ForkConditionTransitions
-	= action(ForkCondition condition, StateTransition transitions)
+	= action(ForkCondition condition, StateTransitions transitions)
 	;
 	
 data ForkCondition = yes() | no() | always();
