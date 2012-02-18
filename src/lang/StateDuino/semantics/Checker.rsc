@@ -17,6 +17,16 @@ public set[Message] fastCheck(StateMachine sm) {
 				result += getInvalidForkChainMessage(f, a);
 		case chain([_*, f:forkDescription(_,_), a:_, _*]) : 
 			result += getInvalidForkChainMessage(f, a);
+			
+		case forkDescription(_, conditions) : {
+				set[str] defined = {};
+				for (a:action(condition,_) <- conditions) {
+					if (condition in defined) {
+						result += {error("Fork condition <condition> is already defined", a@location)};		
+					}
+					defined += { condition };
+				}	
+			}
 	};
 	return result;
 }

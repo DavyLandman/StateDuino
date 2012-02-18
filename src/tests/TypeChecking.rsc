@@ -53,3 +53,15 @@ private bool checkInvalidTransitionChain(str inp) {
 	}
 	return false;
 }
+
+public test bool testInvalidForkConditions() {
+	set[Message] messages = runFastCheckOn("StateMachine Test T? { yes =\> T1 yes =\> T1 }");
+	if (size(messages) == 0) {
+		return false;	
+	}
+	iprint(messages);
+	if (error("Fork condition yes is already defined", _) <- messages) {
+		return true;
+	}
+	return false;
+}
