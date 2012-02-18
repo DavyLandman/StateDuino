@@ -34,7 +34,7 @@ public set[Message] fastCheck(StateMachine sm) {
 	return result;
 }
 private set[Message] getInvalidForkChainMessage(StateTransition forkFrom, StateTransition to) {
-	str m = "A fork cannot be followed by another action or fork.";
+	str m = "A fork (<forkFrom.name.name>) cannot be followed by another action or fork.";
 	return { error(m, joinLoc(forkFrom@location, to@location))};
 }
 

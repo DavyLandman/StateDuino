@@ -28,27 +28,27 @@ public test bool testValidStateTransitionChain() {
 }
 
 public test bool testInvalidStateTransitionChain() {
-	return checkInvalidTransitionChain("StateMachine Test T1=\>T2=\>T3?=\>T4");
+	return checkInvalidTransitionChain("StateMachine Test T1=\>T2=\>T3?=\>T4", "T3?");
 }
 public test bool testInvalidStateTransitionChain2() {
-	return checkInvalidTransitionChain("StateMachine Test T1=\>T2=\>T3? { yes =\> T5 } =\>T4");
+	return checkInvalidTransitionChain("StateMachine Test T1=\>T2=\>T3? { yes =\> T5 } =\>T4", "T3?");
 }
 public test bool testInvalidStateTransitionChain3() {
-	return checkInvalidTransitionChain("StateMachine Test T3? { yes =\> T5 } =\>T4");
+	return checkInvalidTransitionChain("StateMachine Test T3? { yes =\> T5 } =\>T4", "T3?");
 }
 public test bool testInvalidStateTransitionChain4() {
-	return checkInvalidTransitionChain("StateMachine Test T3?=\>T4");
+	return checkInvalidTransitionChain("StateMachine Test T3?=\>T4", "T3?");
 }
 public test bool testInvalidStateTransitionChain5() {
-	return checkInvalidTransitionChain("StateMachine Test T3?=\>T4=\>T5");
+	return checkInvalidTransitionChain("StateMachine Test T3?=\>T4=\>T5", "T3?");
 }
 
-private bool checkInvalidTransitionChain(str inp) {
+private bool checkInvalidTransitionChain(str inp, str forkName) {
 	set[Message] messages = runFastCheckOn(inp);
 	if (size(messages) == 0) {
 		return false;	
 	}
-	if (error("A fork cannot be followed by another action or fork.", _) <- messages) {
+	if (error("A fork (<forkName>) cannot be followed by another action or fork.", _) <- messages) {
 		return true;
 	}
 	return false;
