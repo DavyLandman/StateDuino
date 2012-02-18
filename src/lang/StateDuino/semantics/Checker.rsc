@@ -33,10 +33,16 @@ public set[Message] fastCheck(StateMachine sm) {
 	};
 	return result;
 }
-//(left.offset, left.length + right.length + (right.offset - (left.offset + left.length)));
 private set[Message] getInvalidForkChainMessage(StateTransition forkFrom, StateTransition to) {
 	str m = "A fork cannot be followed by another action or fork.";
-	loc left = forkFrom@location;
-	loc right = to@location;	
-	return { error(m, left), error(m, right)};
+	return { error(m, joinLoc(forkFrom@location, to@location))};
+}
+
+private loc joinLoc(loc left, loc right) {
+	if (left.uri != right.uri) {
+		throw "cannot join locations over file boundry";
+	}
+	loc result = left[length = left.length + right.length+ (right.offset - (left.offset + left.length))];
+	result = result[end = right.end];
+	return result;
 }
