@@ -59,7 +59,6 @@ public test bool testInvalidForkConditions() {
 	if (size(messages) == 0) {
 		return false;	
 	}
-	iprint(messages);
 	if (error("Fork condition yes is already defined", _) <- messages) {
 		return true;
 	}
@@ -70,7 +69,6 @@ public test bool testInvalidForkConditionsName() {
 	if (size(messages) == 0) {
 		return false;	
 	}
-	iprint(messages);
 	if (error("Fork condition ys is not valid", _) <- messages) {
 		return true;
 	}
