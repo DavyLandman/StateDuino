@@ -6,6 +6,7 @@ import ParseTree;
 import Message;
 import Set;
 import IO;
+import vis::Figure;
 
 import lang::StateDuino::cst::Parse;
 import lang::StateDuino::ast::Load;
@@ -22,5 +23,8 @@ public void main() {
 		}
 		return cst;
 	});
-	registerContributions("The StateDuino language", {getSolarizedLightCategories()});
+	registerContributions("The StateDuino language", {
+		getSolarizedLightCategories(),
+		categories(("NonBlocking" : {italic()}))
+	});
 }

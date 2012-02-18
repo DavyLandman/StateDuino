@@ -20,7 +20,7 @@ lexical ActionName = Name name;
 lexical ForkName 
 	= normalFork: Name name "?" 
 	| sleepableFork: "#" Name name "?"
-	| nonBlockingFork: "!" Name name "?"
+	| @category="NonBlocking" nonBlockingFork: "!" Name name "?"
 	;
 syntax StateTransitions
 	= chain: {StateTransition "=\>"}+ transitions;
