@@ -1,5 +1,6 @@
 module lang::StateDuino::semantics::Checker
 
+import Map;
 import List;
 import Message;
 import IO;
@@ -19,13 +20,15 @@ public set[Message] fastCheck(StateMachine sm) {
 			result += getInvalidForkChainMessage(f, a);
 			
 		case forkDescription(_, conditions) : {
-				set[str] defined = {};
+				map[str, loc] defined = ();
 				for (a:action(condition,_) <- conditions) {
-					if (condition in defined) {
+					if (defined[condition]?) {
 						result += {error("Fork condition <condition> is already defined", a@location)};		
 					}
-					defined += { condition };
-				}	
+					defined[condition] = a@location;
+				}
+				set[str] invalidConditions = domain(defined) - validForkConditions;
+				result += {error("Fork condition <con> is not valid", defined[con]) | con <- invalidConditions};
 			}
 	};
 	return result;

@@ -65,3 +65,14 @@ public test bool testInvalidForkConditions() {
 	}
 	return false;
 }
+public test bool testInvalidForkConditionsName() {
+	set[Message] messages = runFastCheckOn("StateMachine Test T? { ys =\> T1 no =\> T1 }");
+	if (size(messages) == 0) {
+		return false;	
+	}
+	iprint(messages);
+	if (error("Fork condition ys is not valid", _) <- messages) {
+		return true;
+	}
+	return false;
+}
