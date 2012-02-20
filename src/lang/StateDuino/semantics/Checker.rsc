@@ -3,6 +3,7 @@ module lang::StateDuino::semantics::Checker
 import Map;
 import List;
 import Message;
+import Relation;
 import IO;
 import lang::StateDuino::ast::Main;
 import lang::StateDuino::semantics::Concepts;
@@ -30,9 +31,36 @@ public set[Message] fastCheck(StateMachine sm) {
 				set[str] invalidConditions = domain(defined) - validForkConditions;
 				result += {error("Fork condition <con> is not valid", defined[con]) | con <- invalidConditions};
 			}
+			
 	};
 	return result;
 }
+
+public set[Message] realCheck(StateMachine sm) {
+	set[Message] result = fastCheck(sm);
+	result += checkForInvalidEnd(sm);
+	return result;
+}
+
+private set[Message] checkForInvalidEnd(StateMachine sm) {
+	set[Message] result = {};
+	set[str] definedStarts = {};
+	rel[str end, loc req] endRequirements = {};
+	visit(sm) {
+		case chain([st, _*, rest:_*]) : {
+				definedStarts += {getName(st)};
+				if (!(forkDescription(_,_) := rest)) {
+					endRequirements += {<getName(rest), rest@location>};	
+				}
+			}
+	}
+	set[str] missingDefines = domain(endRequirements) - definedStarts;
+	result += {*{error("<md> is undefined", l) | l <- endRequirements[md]} | md <- missingDefines};
+	return result;
+}
+
+private str getName(StateTransition st) = (action(_) := st) ? st.action : st.name.name;
+
 private set[Message] getInvalidForkChainMessage(StateTransition forkFrom, StateTransition to) {
 	str m = "A fork (<forkFrom.name.name>) cannot be followed by another action or fork.";
 	return { error(m, joinLoc(forkFrom@location, to@location))};

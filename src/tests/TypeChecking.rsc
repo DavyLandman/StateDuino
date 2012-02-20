@@ -10,12 +10,29 @@ import IO;
 private set[Message] runFastCheckOn(str input) {
 	return fastCheck(getStateMachine(input));
 }
+private set[Message] runBigCheckOn(str input) {
+	return realCheck(getStateMachine(input));
+}
 private bool checkContainsErrorMessage(str input, str message) {
 	set[Message] messages = runFastCheckOn(input);
 	if (error(message, _) <- messages) {
 		return true;
 	}
 	return false;
+}
+private bool verifyContainsErrorMessage(str input, str message) {
+	set[Message] messages = runBigCheckOn(input);
+	if (error(message, _) <- messages) {
+		return true;
+	}
+	return false;
+}
+private bool verifyNotContainsErrorMessage(str input, str message) {
+	set[Message] messages = runBigCheckOn(input);
+	if (error(message, _) <- messages) {
+		return false;
+	}
+	return true;
 }
 
 public test bool testInvalidTypes() {
@@ -25,7 +42,7 @@ public test bool testInvalidTypes() {
 }
 
 public test bool testValidStateTransitionChain() {
-	set[Message] messages = runFastCheckOn("StateMachine Test T1=\>T2=\>T3?");
+	set[Message] messages = runFastCheckOn("StateMachine Test T1=\>T2=\>T3? { yes =\> T1 }");
 	return size(messages) == 0;
 }
 
@@ -58,5 +75,33 @@ public test bool testInvalidForkConditions() {
 public test bool testInvalidForkConditionsName() {
 	return checkContainsErrorMessage("StateMachine Test T? { ys =\> T1 no =\> T1 }",
 		"Fork condition ys is not valid"
+		);
+}
+
+
+public test bool testUndefinedEnd() {
+	return verifyContainsErrorMessage("StateMachine Test T1 =\> T4 =\> T2",
+		"T2 is undefined"
+		);
+}
+
+public test bool testUndefinedEnd2() {
+	return verifyContainsErrorMessage("StateMachine Test T1 =\> T2?",
+		"T2? is undefined"
+		);
+}
+public test bool testUndefinedEnd3() {
+	return verifyContainsErrorMessage("StateMachine Test T1 =\> T2 T2 =\> T3",
+		"T3 is undefined"
+		);
+}
+public test bool testSingleDefineWork() {
+	return verifyNotContainsErrorMessage("StateMachine Test T1 =\> T2 T2 =\> T3",
+		"T2 is undefined"
+		);
+}
+public test bool testSingleDefineWork2() {
+	return verifyNotContainsErrorMessage("StateMachine Test T1 =\> T2? T2? { yes =\> T1 } ",
+		"T2 is undefined"
 		);
 }
