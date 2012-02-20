@@ -105,3 +105,19 @@ public test bool testSingleDefineWork2() {
 		"T2 is undefined"
 		);
 }
+public test bool testNotTerminating() {
+	return verifyContainsErrorMessage("StateMachine Test T1 =\> T2 =\> T1",
+		"T1 will never terminate, you should end in a Fork"
+		);
+}
+public test bool testNotTerminating2() {
+	return verifyContainsErrorMessage("StateMachine Test T1 =\> !T2? !T2? { yes=\> T1 }",
+		"T1 will never terminate, you should end in a Fork"
+		);
+}
+
+public test bool testWillTerminate() {
+	return verifyNotContainsErrorMessage("StateMachine Test T1 =\> !T2? !T2? { yes=\> T1 no =\> T4?} T4? { yes =\> T1 }",
+		"T1 will never terminate, you should end in a Fork"
+		);
+}
