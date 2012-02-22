@@ -36,7 +36,7 @@ public set[Message] fastCheck(StateMachine sm) {
 	return result;
 }
 
-public set[Message] realCheck(StateMachine sm) {
+public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);
 	result += checkForInvalidEnd(sm);
 	return result;

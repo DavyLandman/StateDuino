@@ -11,7 +11,7 @@ private set[Message] runFastCheckOn(str input) {
 	return fastCheck(getStateMachine(input));
 }
 private set[Message] runBigCheckOn(str input) {
-	return realCheck(getStateMachine(input));
+	return fullCheck(getStateMachine(input));
 }
 private bool checkContainsErrorMessage(str input, str message) {
 	set[Message] messages = runFastCheckOn(input);

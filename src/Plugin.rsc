@@ -10,21 +10,25 @@ import vis::Figure;
 
 import lang::StateDuino::cst::Parse;
 import lang::StateDuino::ast::Load;
+import lang::StateDuino::ast::Main;
 import lang::StateDuino::semantics::Checker;
 
 public void main() {
 	registerLanguage("The StateDuino language", "sdo", parseStateMachine);
-	registerAnnotator("The StateDuino language", Tree (Tree cst)
-	{
-		lang::StateDuino::ast::Main::StateMachine ast = getStateMachine(cst);
-		set[Message] messages = fastCheck(ast);
-		if (size(messages) > 0) {
-			return cst[@messages = messages];
-		}
-		return cst;
-	});
 	registerContributions("The StateDuino language", {
 		getSolarizedLightCategories(),
-		categories(("NonBlocking" : {italic()}))
+		categories(("NonBlocking" : {italic()})),
+		annotator(Tree (Tree cst) {
+			set[Message] messages = fastCheck(getStateMachine(cst));
+			if (size(messages) > 0) {
+				return cst[@messages = messages];
+			}
+			return cst;
+		}),
+		builder(set[Message] (Tree cst) {
+			StateMachine ast = getStateMachine(cst);
+			set[Message] messages = fullCheck(ast);
+			return messages;
+		})
 	});
 }
