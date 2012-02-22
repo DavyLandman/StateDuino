@@ -38,10 +38,23 @@ public set[Message] fastCheck(StateMachine sm) {
 
 public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);
+	result += checkForSingleChains(sm);
 	result += checkForInvalidEnd(sm);
 	return result;
 }
 
+private set[Message] checkForSingleChains(StateMachine sm) {
+	set[Message] result = {};
+	for (chain([single]) <- sm.transitions) {
+		if (action(_) := single) {
+			result += {error("Single action <getName(single)> has no path to follow", single@location); };
+		}	
+		else if (fork(_) := single) {
+			result += {error("Single fork <getName(single)> has no path to follow", single@location); };
+		}	
+	}
+	return result;
+}
 private set[Message] checkForInvalidEnd(StateMachine sm) {
 	set[Message] result = {};
 	set[str] definedStarts = {};

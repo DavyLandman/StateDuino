@@ -83,6 +83,22 @@ public test bool testInvalidForkConditionsName() {
 		);
 }
 
+public test bool testSingleActionNotAllowed() {
+	return verifyContainsErrorMessage("StateMachine Test T1 ",
+		"Single action T1 has no path to follow"
+		);
+}
+public test bool testSingleActionNotAllowed2() {
+	return verifyContainsErrorMessage("StateMachine Test T1? ",
+		"Single fork T1? has no path to follow"
+		);
+}
+public test bool testSingleActionNotAllowed2() {
+	return verifyNotContainsErrorMessage("StateMachine Test T1? { yes =\> T2 } T2 =\> T1? ",
+		"Single action T2 has no path to follow"
+		);
+}
+
 
 public test bool testUndefinedEnd() {
 	return verifyContainsErrorMessage("StateMachine Test T1 =\> T4 =\> T2",
