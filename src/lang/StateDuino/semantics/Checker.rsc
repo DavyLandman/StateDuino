@@ -4,6 +4,7 @@ import Map;
 import List;
 import Message;
 import Relation;
+import Graph;
 import IO;
 import lang::StateDuino::ast::Main;
 import lang::StateDuino::semantics::Concepts;
@@ -40,6 +41,7 @@ public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);
 	result += checkForSingleChains(sm);
 	result += checkForInvalidEnd(sm);
+	result += checkInfinateLoops(sm);
 	return result;
 }
 
@@ -75,6 +77,30 @@ private set[Message] checkForInvalidEnd(StateMachine sm) {
 	return result;
 }
 
+private set[Message] checkInfinateLoops(StateMachine sm) {
+	set[Message] result = {};
+	Graph[str] states = {};
+	rel[str, loc] startStates = {};
+	visit (sm) {
+		case chain([st, _*, end]) : {
+			states += {<getName(st), getName(end)>};
+			startStates += {<getName(st), st@location>};
+		}
+			
+		case fd:forkDescription(nonBlockingFork(name), transitions): {
+			// these forks do not stop so we have to act asif it's just two actions
+			for (action(_,chain([st,_*])) <- transitions) {
+				states += {<name, getName(st)>};
+			}
+		}
+	}
+	for (<state, state> <- states+) {
+		// we have a loop
+		list[str] loopRoute = shortestPathPair(states, state, state);
+		result += {error("<state> will never terminate, you should end in a Fork",l) | l <- startStates[state]};
+	}
+	return result;
+}
 private str getName(StateTransition st) = (action(_) := st) ? st.action : st.name.name;
 
 private set[Message] getInvalidForkChainMessage(StateTransition forkFrom, StateTransition to) {

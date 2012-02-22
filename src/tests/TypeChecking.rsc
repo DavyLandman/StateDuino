@@ -117,7 +117,7 @@ public test bool testUndefinedEnd3() {
 		);
 }
 public test bool testSingleDefineWork() {
-	return verifyContainsNoErrorMessages("StateMachine Test T1 =\> T2 T2 =\> T3 T3 =\> T1");
+	return verifyContainsNoErrorMessages("StateMachine Test T1 =\> T2? T2? { yes =\> T3} T3 =\> T1");
 }
 public test bool testSingleDefineWork2() {
 	return verifyContainsNoErrorMessages("StateMachine Test T1 =\> T2? T2? { yes =\> T1 } ");
