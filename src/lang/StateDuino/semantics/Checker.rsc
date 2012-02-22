@@ -16,7 +16,7 @@ public set[Message] fastCheck(StateMachine sm) {
 				result += {error("Type <name> is not supported",p@location)};
 			}
 		case chain([_*,f:fork(_), a:_, _*]) :  
-				result += getInvalidForkChainMessage(f, a);
+			result += getInvalidForkChainMessage(f, a);
 		case chain([_*, f:forkDescription(_,_), a:_, _*]) : 
 			result += getInvalidForkChainMessage(f, a);
 			
