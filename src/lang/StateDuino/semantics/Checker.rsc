@@ -53,6 +53,9 @@ private set[Message] checkForInvalidEnd(StateMachine sm) {
 					endRequirements += {<getName(rest), rest@location>};	
 				}
 			}
+		case chain([st:forkDescription(_,_)]) : {
+				definedStarts += {getName(st)};
+		}
 	}
 	set[str] missingDefines = domain(endRequirements) - definedStarts;
 	result += {*{error("<md> is undefined", l) | l <- endRequirements[md]} | md <- missingDefines};

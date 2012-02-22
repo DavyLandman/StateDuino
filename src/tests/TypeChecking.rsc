@@ -35,6 +35,11 @@ private bool verifyNotContainsErrorMessage(str input, str message) {
 	return true;
 }
 
+private bool verifyContainsNoErrorMessages(str input) {
+	return size(runBigCheckOn(input)) == 0;
+}
+
+
 public test bool testInvalidTypes() {
 	return checkContainsErrorMessage("StateMachine Test(xxx invalid)",
 		"Type xxx is not supported"
@@ -96,15 +101,12 @@ public test bool testUndefinedEnd3() {
 		);
 }
 public test bool testSingleDefineWork() {
-	return verifyNotContainsErrorMessage("StateMachine Test T1 =\> T2 T2 =\> T3",
-		"T2 is undefined"
-		);
+	return verifyContainsNoErrorMessages("StateMachine Test T1 =\> T2 T2 =\> T3 T3 =\> T1");
 }
 public test bool testSingleDefineWork2() {
-	return verifyNotContainsErrorMessage("StateMachine Test T1 =\> T2? T2? { yes =\> T1 } ",
-		"T2 is undefined"
-		);
+	return verifyContainsNoErrorMessages("StateMachine Test T1 =\> T2? T2? { yes =\> T1 } ");
 }
+
 public test bool testNotTerminating() {
 	return verifyContainsErrorMessage("StateMachine Test T1 =\> T2 =\> T1",
 		"T1 will never terminate, you should end in a Fork"
