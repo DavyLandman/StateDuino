@@ -86,11 +86,11 @@ private set[Message] checkInfinateLoops(StateMachine sm) {
 	map[str, loc] startStates = ();
 	set[str] mainForks = {getName(f) | chain([_*, f:forkDescription(fn,_)]) <- sm.transitions, !(nonBlockingFork(_) := fn)};
 	//set[str] mainNonBlockingForks = {getName(fn) | chain([forkDescription(fn,_)]) <- sm.transitions, (nonBlockingFork(_) := fn)};
-	for (c:chain([st,_*, end]) <- sm.transitions) {
+	for (/c:chain([st,_*, end]) <- sm.transitions) {
 		states += {<getName(st), getName(end)>};
 		startStates[getName(st)] = st@location;
 	}
-	for (c:chain([_*, f:forkDescription(nonBlockingFork(name),transitions)]) <- sm.transitions) {
+	for (/f:forkDescription(nonBlockingFork(name),transitions) <- sm.transitions) {
 		// since these are a kind of action lets add them to the states
 		for (action(_,chain([st,_*])) <- transitions) {
 			states += {<name, getName(st)>};
