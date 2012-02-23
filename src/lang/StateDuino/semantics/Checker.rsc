@@ -84,7 +84,7 @@ private set[Message] checkInfinateLoops(StateMachine sm) {
 	set[str] loopStarts = {};
 	Graph[str] states = {};
 	map[str, loc] startStates = ();
-	set[str] mainForks = {getName(f) | chain([f:forkDescription(fn,_)]) <- sm.transitions, !(nonBlockingFork(_) := fn)};
+	set[str] mainForks = {getName(f) | chain([_*, f:forkDescription(fn,_)]) <- sm.transitions, !(nonBlockingFork(_) := fn)};
 	//set[str] mainNonBlockingForks = {getName(fn) | chain([forkDescription(fn,_)]) <- sm.transitions, (nonBlockingFork(_) := fn)};
 	for (c:chain([st,_*, end]) <- sm.transitions) {
 		states += {<getName(st), getName(end)>};

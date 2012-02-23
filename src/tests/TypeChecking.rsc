@@ -139,3 +139,25 @@ public test bool testWillTerminate() {
 		"T1 will never terminate, you should end in a Fork"
 		);
 }
+public test bool testWillTerminate2() {
+	return verifyNotContainsErrorMessage("StateMachine Test T1 =\> !T2?
+	!T2? { 
+		yes=\> T1 
+		no =\> !T4? { 
+			yes =\> T1
+			no =\> T5?
+		}
+	}
+	T5? { yes =\> T1 } ",
+		"T1 will never terminate, you should end in a Fork"
+		);
+}
+
+public test bool testWillTerminate3() {
+	return verifyNotContainsErrorMessage("StateMachine Test T1 =\> T2? { 
+		yes=\> T1 
+	}
+	",
+		"T1 will never terminate, you should end in a Fork"
+		);
+}
