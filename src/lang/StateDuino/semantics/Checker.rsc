@@ -2,6 +2,7 @@ module lang::StateDuino::semantics::Checker
 
 import Map;
 import List;
+import Set;
 import Message;
 import Relation;
 import Graph;
@@ -79,28 +80,33 @@ private set[Message] checkForInvalidEnd(StateMachine sm) {
 
 private set[Message] checkInfinateLoops(StateMachine sm) {
 	set[Message] result = {};
+	// first check main chians
+	set[str] loopStarts = {};
 	Graph[str] states = {};
-	rel[str, loc] startStates = {};
-	visit (sm) {
-		case chain([st, _*, end]) : {
-			states += {<getName(st), getName(end)>};
-			startStates += {<getName(st), st@location>};
-		}
-			
-		case fd:forkDescription(nonBlockingFork(name), transitions): {
-			// these forks do not stop so we have to act asif it's just two actions
-			for (action(_,chain([st,_*])) <- transitions) {
-				states += {<name, getName(st)>};
-			}
-		}
+	map[str, loc] startStates = ();
+	set[str] mainForks = {getName(f) | chain([f:forkDescription(fn,_)]) <- sm.transitions, !(nonBlockingFork(_) := fn)};
+	//set[str] mainNonBlockingForks = {getName(fn) | chain([forkDescription(fn,_)]) <- sm.transitions, (nonBlockingFork(_) := fn)};
+	for (c:chain([st,_*, end]) <- sm.transitions) {
+		states += {<getName(st), getName(end)>};
+		startStates[getName(st)] = st@location;
 	}
-	for (<state, state> <- states+) {
-		// we have a loop
-		list[str] loopRoute = shortestPathPair(states, state, state);
-		result += {error("<state> will never terminate, you should end in a Fork",l) | l <- startStates[state]};
+	for (c:chain([_*, f:forkDescription(nonBlockingFork(name),transitions)]) <- sm.transitions) {
+		// since these are a kind of action lets add them to the states
+		for (action(_,chain([st,_*])) <- transitions) {
+			states += {<name, getName(st)>};
+		}
+		startStates[name] = f@location;
 	}
+	Graph[str] transStates = states+;
+	for (str startState <- startStates) {
+		if (size(transStates[startState] & mainForks) == 0) {
+			loopStarts += {startState};
+		}		
+	}
+	result += {error("<state> will never terminate, you should end in a Fork",startStates[state]) | state <- loopStarts};
 	return result;
 }
+
 private str getName(StateTransition st) = (action(_) := st) ? st.action : st.name.name;
 
 private set[Message] getInvalidForkChainMessage(StateTransition forkFrom, StateTransition to) {
