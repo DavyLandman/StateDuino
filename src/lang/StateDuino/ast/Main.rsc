@@ -1,6 +1,11 @@
 module lang::StateDuino::ast::Main
 
-data StateMachine = stateMachine(StateMachineIdentifier name, list[StateTransitions] transitions);
+data StateMachine = stateMachine(StateMachineIdentifier name, StartState startState, list[StateTransitions] transitions);
+
+data StartState 
+	= forkStart(ForkName fork)
+	| actionStart(str action)
+	;
 
 data StateMachineIdentifier 
 	= normal(str name)
@@ -28,6 +33,7 @@ data ForkConditionTransitions
 	;
 	
 anno loc StateMachine@location;
+anno loc StartState@location;
 anno loc StateMachineIdentifier@location;
 anno loc Parameter@location;
 anno loc StateTransitions@location;

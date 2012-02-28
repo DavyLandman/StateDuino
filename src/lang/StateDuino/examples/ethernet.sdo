@@ -1,4 +1,5 @@
 StateMachine Ethernet
+start = InitializeEthernetCommunication
 
 InitializeEthernetCommunication => ShouldStartCommunication?
 

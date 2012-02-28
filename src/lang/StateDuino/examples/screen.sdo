@@ -1,4 +1,5 @@
 StateMachine Screen
+start = InitializeScreenRendering
 
 InitializeScreenRendering => ShouldScreenWakeUp?
 

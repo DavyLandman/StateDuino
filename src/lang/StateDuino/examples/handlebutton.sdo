@@ -1,4 +1,5 @@
 StateMachine HandleButton(int buttonID)
+start = InitializeHandleButton
 
 InitializeHandleButton => #HasButtonCheckTimePassed?
 

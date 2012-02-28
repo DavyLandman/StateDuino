@@ -1,4 +1,5 @@
 StateMachine Temperature
+start = InitializeTemperatureMeasurement
 
 InitializeTemperatureMeasurement => ShouldStartMeasurement?
 

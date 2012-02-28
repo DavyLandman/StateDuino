@@ -1,4 +1,5 @@
 StateMachine ButtonDebounce(int buttonPort, int buttonID)
+start = InitializeButtonDebounce
 
 InitializeButtonDebounce => ButtonPressed?
 

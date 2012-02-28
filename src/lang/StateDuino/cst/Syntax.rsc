@@ -2,7 +2,14 @@ module lang::StateDuino::cst::Syntax
 
 extend lang::std::Layout; // get comments and spaces layout for free
 
-start syntax StateMachine = stateMachine: "StateMachine" StateMachineIdentifier name StateTransitions* transitions;
+start syntax StateMachine = stateMachine: "StateMachine" StateMachineIdentifier name
+	"start" "=" StartState startState
+	StateTransitions* transitions;
+
+syntax StartState 
+	= forkStart: ForkName fork
+	| actionStart :	ActionName action
+	;
 
 syntax StateMachineIdentifier 
 	= normal: Name name
