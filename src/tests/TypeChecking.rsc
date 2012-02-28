@@ -99,6 +99,11 @@ public test bool testSingleActionNotAllowed2() {
 		);
 }
 
+public test bool testUndefinedStart() {
+	return verifyContainsErrorMessage("StateMachine Test start = T1",
+		"T1 is undefined"
+		);
+}
 
 public test bool testUndefinedEnd() {
 	return verifyContainsErrorMessage("StateMachine Test start = T1 T1 =\> T4 =\> T2",

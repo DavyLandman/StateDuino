@@ -69,6 +69,12 @@ private set[Message] checkForInvalidEnd(StateMachine sm) {
 					endRequirements += {<getName(rest), rest@location>};	
 				}
 			}
+		case fs:forkStart(fn) : {
+			endRequirements += {<fn.name, fs@location>};	
+		}
+		case as:actionStart(an) : {
+			endRequirements += {<an, as@location>};	
+		}
 		case chain([st:forkDescription(_,_)]) : {
 				definedStarts += {getName(st)};
 		}
