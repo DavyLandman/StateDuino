@@ -15,6 +15,7 @@ import lang::StateDuino::semantics::Checker;
 
 public void main() {
 	registerLanguage("The StateDuino language", "sdo", parseStateMachine);
+	registerLanguage("The StateDuino Coordinator language", "csdo", parseCoordinator);
 	registerContributions("The StateDuino language", {
 		getSolarizedLightCategories(),
 		categories(("NonBlocking" : {italic()})),
@@ -30,5 +31,8 @@ public void main() {
 			set[Message] messages = fullCheck(ast);
 			return messages;
 		})
+	});
+	registerContributions("The StateDuino Coordinator language", {
+		getSolarizedLightCategories()
 	});
 }
