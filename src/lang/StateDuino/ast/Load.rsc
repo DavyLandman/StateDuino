@@ -12,3 +12,12 @@ public StateMachine getStateMachine (loc stateMachineFile)
 
 public StateMachine getStateMachine (Tree stateMachineParsedTree) 
 	= implode(#StateMachine, stateMachineParsedTree);
+	
+public Coordinator getCoordinator (str stateMachineString) 
+	= implode(#Coordinator, parseCoordinator(stateMachineString));
+
+public Coordinator getCoordinator (loc stateMachineFile) 
+	= implode(#Coordinator, parseCoordinator(stateMachineFile));
+
+public Coordinator getCoordinator (Tree coordinatorParsedTree) 
+	= implode(#Coordinator, coordinatorParsedTree);

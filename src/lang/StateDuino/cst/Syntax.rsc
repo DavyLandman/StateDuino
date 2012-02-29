@@ -43,3 +43,14 @@ lexical ForkCondition = @category="MetaKeyword" ([a-zA-Z!] [a-zA-Z0-9_+\-!]* !>>
 syntax ForkConditionTransitions
 	= action: ForkCondition condition "=\>" StateTransitions transitions
 	;
+	
+	
+start syntax Coordinator = coordinator: "Coordinator" Name name Invoke* invokes;
+
+syntax Invoke = invoke: Name name "(" {ParameterValue ","}* params ")" ";"; 
+
+syntax ParameterValue
+	= normal: Number n
+	| range: "[" Number rangeStart ".." Number rangeStop "]"
+	;
+lexical Number = @category="Constant" [0-9]+ !>> [0-9];

@@ -32,6 +32,16 @@ data ForkConditionTransitions
 	= action(str condition, StateTransitions transitions)
 	;
 	
+	
+data Coordinator = coordinator(str name, list[Invoke] invokes);
+
+data Invoke = invoke(str name, list[ParameterValue] params);
+
+data ParameterValue
+	= normal(int number)
+	| range(int startRange, int stopRange)
+	;
+	
 anno loc StateMachine@location;
 anno loc StartState@location;
 anno loc StateMachineIdentifier@location;
@@ -40,3 +50,6 @@ anno loc StateTransitions@location;
 anno loc StateTransition@location;
 anno loc ForkName@location;
 anno loc ForkConditionTransitions@location;
+anno loc Coordinator@location;
+anno loc Invoke@location;
+anno loc ParameterValue@location;

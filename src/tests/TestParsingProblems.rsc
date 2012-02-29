@@ -23,6 +23,15 @@ public rel[loc,Tree] checkAllAmbiguities() {
 		}
 		catch: ;
 	});
+	iterateOverAllCSDOFiles(void (loc f) {
+		try {
+			parsed = parseCoordinator(f);
+			if (/a:amb(_) := parsed) {
+				result += {<f, a>};
+			}
+		}
+		catch: ;
+	});
 	return result;
 }
 
@@ -34,11 +43,25 @@ private void iterateOverAllSDOFiles(void (loc f) perFile) {
 	}
 }
 
+private void iterateOverAllCSDOFiles(void (loc f) perFile) {
+	csfFiles = crawl(|project://stateduino/src/lang/StateDuino/examples/|);
+	for (/file(l) <- csfFiles, l.extension == "csdo") {
+		println("Checking <l>");
+		perFile(l);
+	}
+}
+
 public rel[loc,loc] checkParsingErrors() {
 	result = {};
 	iterateOverAllSDOFiles(void (loc f) {
 		try {
 			parsed = parseStateMachine(f);
+		}
+		catch ParseError(el) : result += {<f, el>};
+	});
+	iterateOverAllCSDOFiles(void (loc f) {
+		try {
+			parsed = parseCoordinator(f);
 		}
 		catch ParseError(el) : result += {<f, el>};
 	});
