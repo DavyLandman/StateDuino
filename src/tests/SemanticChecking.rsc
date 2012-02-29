@@ -1,4 +1,4 @@
-module tests::TypeChecking
+module tests::SemanticChecking
 
 import lang::StateDuino::ast::Main;
 import lang::StateDuino::ast::Load;
