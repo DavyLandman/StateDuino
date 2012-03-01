@@ -19,11 +19,13 @@ private StateMachine nestActions(StateMachine complex) {
 		}
 		globalActions[firstName] = c;		
 	}
-	
-	StateMachine nested = visit(complex) {
-		case action(name, c:chain([_*,action(actionName)])) =>
-			action(name, chain(prefix(c.transitions) + (globalActions[actionName].transitions)))
-	};
+	StateMachine nested = complex;
+	solve(nested) {
+		nested = visit(nested) {
+			case action(name, c:chain([_*,action(actionName)])) =>
+				action(name, chain(prefix(c.transitions) + (globalActions[actionName].transitions)))
+		};
+	}
 	return nested;
 }
 
