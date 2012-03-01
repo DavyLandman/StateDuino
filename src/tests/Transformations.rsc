@@ -59,3 +59,13 @@ public test bool checkNonStartIsRemoved2() {
 		return true;
 	}
 }
+public test bool checkForkIsUnnested() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 T1 =\> T2 T2 =\> T3? { yes =\> T1 }");
+	if (chain([forkDescription(normalFork("T3?"), _)]) <- result.transitions) {
+		iprint(result);
+		return true;
+	}
+	else {
+		return false;
+	}
+}
