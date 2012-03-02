@@ -62,19 +62,19 @@ public test bool checkNonStartIsRemoved2() {
 public test bool checkForkIsUnnested() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 T1 =\> T2 T2 =\> T3? { yes =\> T1 }");
 	if (chain([forkDescription(normalFork("T3?"), _)]) <- result.transitions) {
-		iprint(result);
 		return true;
 	}
 	else {
+		iprint(result);
 		return false;
 	}
 }
 
 
 
-public test bool nonBlockingForkInsideNestedFork() {
+public test bool testNestedForkDefinitionsAreAlsoMovedUp() {
 	StateMachine result = getSimplified("StateMachine Test start=T1? T1? { yes =\> !T2? } !T2? { yes =\> T1? { yes =\> !T2? } }");
-	if (chain([forkDescription(normalFork("T1?"), action(_, forkDescription(nonBlockingFork("!T2?"),_)))]) <- result.transitions) {
+	if (chain([forkDescription(normalFork("T1??"), [action(_, chain([fork(nonBlockingFork("!T2?"))]))])]) <- result.transitions) {
 		return true;
 	}
 	else {
