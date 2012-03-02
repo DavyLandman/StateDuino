@@ -18,17 +18,22 @@ public StateMachine simplify(StateMachine complex) {
 private StateMachine nestActions(StateMachine complex) {
 	map[str, StateTransitions] globalActions = ();
 	for (c:chain([action(firstName), rest:_*]) <- complex.transitions) {
-		if (chain([before:_*, forkDescription(forkName,_)]) := c) {
+		if (chain([before:_*, forkDescription(forkName,_)]) := c, !(nonBlockingFork(_) := forkName)) {
 			// remove the fork description for this chain to avoid nested fork descriptions
 			c = chain([before, fork(forkName)]);
 		}
 		globalActions[firstName] = c;		
+	}
+	for (c:chain([f:forkDescription(nonBlockingFork(forkName), _)]) <- complex.transitions) {
+		globalActions[forkName] = c;		
 	}
 	StateMachine nested = complex;
 	solve(nested) {
 		nested = visit(nested) {
 			case c:chain([_*,action(actionName)]) =>
 				chain(prefix(c.transitions) + (globalActions[actionName].transitions))
+			case c:chain([_*,fork(nonBlockingFork(forkName))]) =>
+				chain(prefix(c.transitions) + (globalActions[forkName].transitions))
 		};
 	}
 	return nested;
