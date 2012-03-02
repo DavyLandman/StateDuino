@@ -69,3 +69,35 @@ public test bool checkForkIsUnnested() {
 		return false;
 	}
 }
+
+
+public test bool nonBlockinForkShouldBecomeNested() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 T1 =\> !T2? !T2? { yes =\> T3? } T3? { yes =\> T1 }");
+	if (/forkDescription(_, [action("yes", chain([action("T1"), forkDescription(nonBlockingFork("!T2?"), _)]))]) := result) {
+		return true;
+	}
+	else {
+		iprint(result);
+		return false;
+	}
+}
+public test bool nonBlockinForkShouldBecomeNestedPerhapsTwice() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 T1 =\> !T2? !T2? { yes =\> T3? } T3? { yes =\> T1 }");
+	if (chain([action("T1"), forkDescription(nonBlockingFork("!T2?"), _)]) <- result) {
+		return true;
+	}
+	else {
+		iprint(result);
+		return false;
+	}
+}
+public test bool nonBlockinForkShouldBeRemovedFromMain() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 T1 =\> !T2? !T2? { yes =\> T3? } T3? { yes =\> T1 }");
+	if (chain([forkDescription(nonBlockingFork("!T2?"),_), _*]) <- result.transitions) {
+		iprint(result);
+		return false;
+	}
+	else {
+		return true;
+	}
+}

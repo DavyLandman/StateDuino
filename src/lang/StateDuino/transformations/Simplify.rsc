@@ -20,9 +20,7 @@ private StateMachine nestActions(StateMachine complex) {
 	for (c:chain([action(firstName), rest:_*]) <- complex.transitions) {
 		if (chain([before:_*, forkDescription(forkName,_)]) := c) {
 			// remove the fork description for this chain to avoid nested fork descriptions
-			oldC = c;
 			c = chain([before, fork(forkName)]);
-			c@location = oldC@location;
 		}
 		globalActions[firstName] = c;		
 	}
