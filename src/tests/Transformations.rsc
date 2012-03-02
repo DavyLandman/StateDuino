@@ -83,7 +83,7 @@ public test bool nonBlockinForkShouldBecomeNested() {
 }
 public test bool nonBlockinForkShouldBecomeNestedPerhapsTwice() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 T1 =\> !T2? !T2? { yes =\> T3? } T3? { yes =\> T1 }");
-	if (chain([action("T1"), forkDescription(nonBlockingFork("!T2?"), _)]) <- result) {
+	if (chain([action("T1"), forkDescription(nonBlockingFork("!T2?"), _)]) <- result.transitions) {
 		return true;
 	}
 	else {
