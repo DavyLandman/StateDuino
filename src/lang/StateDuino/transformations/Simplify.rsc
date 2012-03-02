@@ -11,6 +11,7 @@ public StateMachine simplify(StateMachine complex) {
 	StateMachine result = complex;
 	result = nestActions(result);
 	result = unnestForks(result);
+	result = removeMainActions(result);
 	return result;
 }
 
@@ -60,4 +61,19 @@ private StateMachine unnestForks(StateMachine nestedActions) {
 		case f:forkDesciption(name, _) => fork(nestedToUnnested[f].name) 
 			when name in newUnnestedForks
 	};
+}
+private StateMachine removeMainActions(StateMachine simplified) {
+	str startState = (simplified.startState.action?) ? simplified.startState.action : simplified.startState.fork.name;
+	list[StateTransitions] newTransitions = [];
+	for (c:chain([first,_*]) <- simplified.transitions)  {
+		if (action(name) := first) {
+			if (name == startState) {
+				newTransitions += [c];	
+			}
+		}
+		else {
+			newTransitions += [c];	
+		}
+	};
+	return simplified[transitions = newTransitions];
 }
