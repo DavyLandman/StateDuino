@@ -27,6 +27,7 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>rascal_eclipse.rascal_nature</nature>
 		<nature>rascal.nature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.eclipse.pde.PluginNature</nature>
