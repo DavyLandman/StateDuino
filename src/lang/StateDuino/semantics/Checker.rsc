@@ -42,6 +42,7 @@ public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);
 	result += checkForSingleChains(sm);
 	result += checkForInvalidEnd(sm);
+	result += checkAlreadyDefinedStarts(sm);
 	result += checkInfinateLoops(sm);
 	return result;
 }
@@ -58,6 +59,23 @@ private set[Message] checkForSingleChains(StateMachine sm) {
 	}
 	return result;
 }
+
+private set[Message] checkAlreadyDefinedStarts(StateMachine sm) {
+	set[Message] result = {};
+	set[str] definedStarts = {};
+	for (chain([st, _*])  <- sm.transitions) {
+		str startName = getName(st);
+		if (startName in definedStarts) {
+			result += {error("<startName> is already defined",st@location)};	
+		} 
+		else {
+			definedStarts += {startName};
+		}
+	}
+	return result;
+}
+
+
 private set[Message] checkForInvalidEnd(StateMachine sm) {
 	set[Message] result = {};
 	set[str] definedStarts = {};

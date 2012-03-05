@@ -121,6 +121,18 @@ public test bool testUndefinedEnd3() {
 		"T3 is undefined"
 		);
 }
+
+public test bool testAlreadyDefine() {
+	return verifyContainsErrorMessage("StateMachine Test start = T1 T1 =\> T2 T1 =\> T2",
+		"T1 is already defined"
+		);
+}
+public test bool testAlreadyDefine2() {
+	return verifyContainsErrorMessage("StateMachine Test start = T1? T1? { yes =\> T1? } T1? { yes =\> T1? }",
+		"T1? is already defined"
+		);
+}
+
 public test bool testSingleDefineWork() {
 	return verifyContainsNoErrorMessages("StateMachine Test start = T1 T1 =\> T2? T2? { yes =\> T3} T3 =\> T1");
 }
