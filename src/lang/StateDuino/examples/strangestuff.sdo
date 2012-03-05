@@ -22,7 +22,6 @@ T1? {
 	}
 }
 
-// this shouldn't be possible, A1 is already declared
-A1 => !T2? {
+A4 => !T2? {
 	yes => T1?
 }
