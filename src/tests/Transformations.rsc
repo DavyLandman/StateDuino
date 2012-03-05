@@ -78,7 +78,7 @@ public test bool testNestedForkDefinitionsAreAlsoMovedUp() {
 		return true;
 	}
 	else {
-		iprint(result);
+		//iprint(result);
 		return false;
 	}
 }
