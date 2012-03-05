@@ -71,38 +71,6 @@ private StateMachine unnestForks(StateMachine nestedActions) {
 	};
 	// now append the unnested forks
 	return renamedForks[transitions = renamedForks.transitions + toList(newGlobalTransitions)];
-	
-	
-	/*
-	map[str, StateTransition] globalForks = (fName.name : f | chain([f:forkDescription(fName,_)]) <- nestedActions.transitions);
-	list[StateTransition] allForks = [f | /chain([_*, f:forkDescription(_,_)]) <- nestedActions.transitions];
-	rel[StateTransition old, StateTransition new] nestedToUnnested = {};
-	
-	println("waht <size(allForks)>");
-	iprint(allForks);
-	for (currentFork:forkDescription(forkName,_) <- allForks, !(currentFork in range(globalForks))) {
-		println("checkingFork <forkName.name>");
-		str newForkName = forkName.name;
-		while (globalForks[newForkName]?) {
-			// we have to rename this fork because a name collision exists
-			newForkName += "?";
-		}	
-		println("newName <newForkName>");
-		newFork = currentFork[name = forkName[name = newForkName]];
-		nestedToUnnested += {<currentFork, newFork>};
-		globalForks[newForkName] = newFork;
-	}	
-	
-	list[StateTransitions] newGlobalTransitions = [ chain([f]) | f <- domain(nestedToUnnested)];
-	// get the names of unnested forks
-	set[str] newUnnestedForks = {f.name.name | chain([f]) <- newGlobalTransitions};
-	
-	StateMachine unnested = nestedActions[transitions = nestedActions.transitions + newGlobalTransitions];
-	return visit(unnested) {
-		case f:forkDesciption(name, _) => fork(nestedToUnnested[f].name) 
-			when name in newUnnestedForks
-	};
-	*/
 }
 private StateMachine removeMainActions(StateMachine simplified) {
 	str startState = (simplified.startState.action?) ? simplified.startState.action : simplified.startState.fork.name;
