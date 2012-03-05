@@ -36,7 +36,14 @@ private bool verifyNotContainsErrorMessage(str input, str message) {
 }
 
 private bool verifyContainsNoErrorMessages(str input) {
-	return size(runBigCheckOn(input)) == 0;
+	set[Message] result = runBigCheckOn(input);
+	if (size(result) == 0) {
+		return true;
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
 }
 
 
