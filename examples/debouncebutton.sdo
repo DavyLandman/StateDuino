@@ -1,0 +1,24 @@
+StateMachine DebounceButton(int id, int pin)
+start = WaitForButtonPressed
+
+fork WaitForButtonPressed {
+	isButtonPressed? => 
+		StartDebounceTimer; 
+		WaitForDebounceToPass;
+	default => WaitForButtonPressed; // this could be implicit 
+
+}
+
+fork WaitForDebounceToPass {
+	isDebounceTimePassed? && isButtonStillHigh? => 
+		MarkButtonPressed;
+		WaitForButtonUnpressed;
+	isDebounceTimePassed? => WaitForButtonPressed;
+	// implicit	default to go to WaitForDebounceToPass
+}
+
+fork WaitForButtonUnpressed {
+	not isButtonPressed? => 
+		MarkButtonUnpressed;
+		WaitForButtonPressed;
+}
