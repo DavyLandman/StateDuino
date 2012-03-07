@@ -1,0 +1,38 @@
+StateMachine Screen
+start = WaitForScreenWakeUp
+
+sleepable fork WaitForScreenWakeUp {
+	ShouldScreenWakeUp? =>
+		WakeScreen;
+		_DrawScreen;
+}
+
+chain _DrawScreen {
+	WriteCurrentTime;
+	immediate fork {
+		IsUpdatingTemperature? =>
+			WriteUpdateTemperatureIcon;
+			_WriteTemperature;
+		default =>
+			FillFirstLineWithSpaces;
+			_WriteTemperature;
+	}
+}
+
+chain _WriteTemperature {
+	WriteTemperature;
+	immediate fork {
+		IsUpdatingTemperature?	=>
+			WriteNewScheduleAndTemperature;
+			WaitForRedraw;
+		default =>
+			WriteCurrentScheduleAndTemperature;
+			WaitForRedraw;
+	}
+}
+
+fork WaitForRedraw {
+	ShouldRedraw? => _DrawScreen;
+	ShouldSleep? => WaitForScreenWakeUp;
+	default => WaitForRedraw;
+}
