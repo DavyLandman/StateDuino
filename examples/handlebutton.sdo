@@ -2,7 +2,7 @@ StateMachine HandleButton(int buttonID)
 start = WaitForButtonCheckTimePassed
 
 sleepable fork WaitForButtonCheckTimePassed {
-	hasButtonCheckTimePassed? && isButtonHigh?
+	hasButtonCheckTimePassed? and isButtonHigh?
 		=> 
 		FireFirstAction;
 		StartButtonHeldCounter;
@@ -14,7 +14,7 @@ sleepable fork WaitForButtonCheckTimePassed {
 }
 
 fork WaitForButtonHeldTimePassed {
-	HasButtonHeldTimePassed? && isButtonHigh? =>
+	HasButtonHeldTimePassed? and isButtonHigh? =>
 		FireAction;
 		StartButtonHeldCounter;
 		WaitForButtonHeldTimePassed;

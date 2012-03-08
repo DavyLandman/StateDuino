@@ -48,10 +48,10 @@ syntax ConditionalPath
 
 syntax ConditionalExpression
 	= single: Condition con
-	| not: "not" Condition con
-	| and: ConditionalExpression lhs "&&" ConditionalExpression rhs
-	| or: ConditionalExpression lhs "||" ConditionalExpression rhs
 	| bracket "(" ConditionalExpression con ")"
+	| not: "not" ConditionalExpression con
+	> left and: ConditionalExpression lhs "and" ConditionalExpression rhs
+	> left or: ConditionalExpression lhs "or" ConditionalExpression rhs
 	;
 
 /*
@@ -69,6 +69,7 @@ lexical ForkCondition = @category="MetaKeyword" ([a-zA-Z!] [a-zA-Z0-9_+\-!]* !>>
 syntax ForkConditionTransitions
 	= action: ForkCondition condition "=\>" StateTransitions transitions
 	;
+	*/
 	
 	
 start syntax Coordinator = coordinator: "Coordinator" Name name Invoke* invokes;
@@ -80,4 +81,3 @@ syntax ParameterValue
 	| range: "[" Number rangeStart ".." Number rangeStop "]"
 	;
 lexical Number = @category="Constant" [0-9]+ !>> [0-9];
-*/

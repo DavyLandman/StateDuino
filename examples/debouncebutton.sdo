@@ -10,7 +10,7 @@ fork WaitForButtonPressed {
 }
 
 fork WaitForDebounceToPass {
-	isDebounceTimePassed? && isButtonStillHigh? => 
+	isDebounceTimePassed? and isButtonStillHigh? => 
 		MarkButtonPressed;
 		WaitForButtonUnpressed;
 	isDebounceTimePassed? => WaitForButtonPressed;
