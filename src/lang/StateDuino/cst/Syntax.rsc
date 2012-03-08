@@ -54,24 +54,6 @@ syntax ConditionalExpression
 	> left or: ConditionalExpression lhs "or" ConditionalExpression rhs
 	;
 
-/*
-syntax StateTransitions
-	= chain: {StateTransition "=\>"}+ transitions;
-		
-syntax StateTransition
-	= action : ActionName action 
-	| fork : ForkName name 
-	| @Foldable forkDescription: ForkName name "{" ForkConditionTransitions+ transitions  "}" 
-	; 
-	
-lexical ForkCondition = @category="MetaKeyword" ([a-zA-Z!] [a-zA-Z0-9_+\-!]* !>> [a-zA-Z0-9_+\-!]);
-
-syntax ForkConditionTransitions
-	= action: ForkCondition condition "=\>" StateTransitions transitions
-	;
-	*/
-	
-	
 start syntax Coordinator = coordinator: "Coordinator" Name name Invoke* invokes;
 
 syntax Invoke = invoke: Name name "(" {ParameterValue ","}* params ")" ";"; 
