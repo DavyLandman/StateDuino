@@ -18,14 +18,15 @@ lexical TypeName = @category="Type" Name;
 lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]);
 
 lexical ActionName = Name name;
-lexical ChainName = @category="Chain""_" Name name;
+lexical ChainName = @category="Chain" "_" Name name;
 lexical ForkName = Name name;
+lexical ForkTypeName = @category="MetaKeyword" Name nam;
 lexical Condition = Name name "?";
 
 
 syntax Definition 
-	= @Foldable forkDefinition: Name* forkType "fork" Name forkName ForkBody body
-	| @Foldable namelessForkDefinition: Name* forkType "fork" ForkBody body
+	= @Foldable forkDefinition: ForkTypeName* forkType "fork" Name forkName ForkBody body
+	| @Foldable namelessForkDefinition: ForkTypeName* forkType "fork" ForkBody body
 	| @Foldable chainDefinition: "chain" ChainName name "{" Action+ actions "}"
 	;
 	
