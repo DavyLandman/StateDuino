@@ -9,7 +9,7 @@ sleepable fork WaitForTemperatureMeasurement {
 
 fork WaitForSmoothingFinished {
 	ShouldSmooth? && EnoughSamplesCollected? =>
-		FillSharedState 
+		FillSharedState;
 		PrepareNextMeasurementRound;
 		WaitForTemperatureMeasurement;
 	ShouldSmooth? =>
