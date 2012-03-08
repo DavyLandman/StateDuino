@@ -1,11 +1,6 @@
 module lang::StateDuino::ast::Main
 
-data StateMachine = stateMachine(StateMachineIdentifier name, StartState startState, list[StateTransitions] transitions);
-
-data StartState 
-	= forkStart(ForkName fork)
-	| actionStart(str action)
-	;
+data StateMachine = stateMachine(StateMachineIdentifier name,  str startFork, list[Definition] definitions);
 
 data StateMachineIdentifier 
 	= normal(str name)
@@ -14,22 +9,28 @@ data StateMachineIdentifier
 
 data Parameter = param(str \type, str name);
 
-data StateTransitions = chain(list[StateTransition] transitions);
-
-data StateTransition 
-	= action(str action)
-	| fork(ForkName name)
-	| forkDescription(ForkName name, list[ForkConditionTransitions] transitions)
-	;
-
-data ForkName
-	= normalFork(str name)
-	| sleepableFork(str name)
-	| nonBlockingFork(str name)
+data Definition 
+	= fork(list[str] forkType, str name, list[Action] preActions, list[ConditionalPath] paths)
+	| namelessFork(list[str] forkType, list[Action] preActions, list[ConditionalPath] paths)
+	| chain(str name, list[Action] actions)
 	;
 	
-data ForkConditionTransitions
-	= action(str condition, StateTransitions transitions)
+data Action
+	= action(str name)
+	| chain(str name)
+	| definition(Definition definition)
+	;
+	
+data ConditionalPath
+	= path(Expression expr, list[Action] actions)
+	| defaultPath(list[Action] actions)
+	;
+	
+data Expression
+	= single(str con)
+	| negate(Expression expr)
+	| and(Expression lhs, Expression rhs)
+	| or(Expression lhs, Expression rhs)
 	;
 	
 	
@@ -43,13 +44,12 @@ data ParameterValue
 	;
 	
 anno loc StateMachine@location;
-anno loc StartState@location;
 anno loc StateMachineIdentifier@location;
 anno loc Parameter@location;
-anno loc StateTransitions@location;
-anno loc StateTransition@location;
-anno loc ForkName@location;
-anno loc ForkConditionTransitions@location;
+anno loc Definition@location;
+anno loc Action@location;
+anno loc ConditionalPath@location;
+anno loc Expression@location;
 anno loc Coordinator@location;
 anno loc Invoke@location;
 anno loc ParameterValue@location;

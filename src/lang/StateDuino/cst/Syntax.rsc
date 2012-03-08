@@ -25,15 +25,10 @@ lexical Condition = Name name "?";
 
 
 syntax Definition 
-	= @Foldable forkDefinition: ForkTypeName* forkType "fork" Name forkName ForkBody body
-	| @Foldable namelessForkDefinition: ForkTypeName* forkType "fork" ForkBody body
-	| @Foldable chainDefinition: "chain" ChainName name "{" Action+ actions "}"
+	= @Foldable fork: ForkTypeName* forkType "fork" Name forkName "{" Action* preActions ConditionalPath+ paths "}"
+	| @Foldable namelessFork: ForkTypeName* forkType "fork" "{" Action* preActions ConditionalPath+ paths "}"
+	| @Foldable chain: "chain" ChainName name "{" Action+ actions "}"
 	;
-	
-syntax ForkBody = body: "{" 
-		Action* preActions
-		ConditionalPath+ paths
-	"}";
 	
 syntax Action 
 	= action: ActionName name ";"
@@ -42,16 +37,16 @@ syntax Action
 	;
 	
 syntax ConditionalPath 
-	= @Foldable path: ConditionalExpression expr "=\>" Action+ actions
+	= @Foldable path: Expression expr "=\>" Action+ actions
 	| @Foldable defaultPath: "default" "=\>" Action+ actions
 	;
 
-syntax ConditionalExpression
+syntax Expression
 	= single: Condition con
-	| bracket "(" ConditionalExpression con ")"
-	| not: "not" ConditionalExpression con
-	> left and: ConditionalExpression lhs "and" ConditionalExpression rhs
-	> left or: ConditionalExpression lhs "or" ConditionalExpression rhs
+	| bracket "(" Expression expr ")"
+	| negate: "not" Expression expr 
+	> left and: Expression lhs "and" Expression rhs
+	> left or: Expression lhs "or" Expression rhs
 	;
 
 start syntax Coordinator = coordinator: "Coordinator" Name name Invoke* invokes;
