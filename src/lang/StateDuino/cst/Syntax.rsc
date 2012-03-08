@@ -3,13 +3,8 @@ module lang::StateDuino::cst::Syntax
 extend lang::std::Layout; // get comments and spaces layout for free
 
 start syntax StateMachine = stateMachine: "StateMachine" StateMachineIdentifier name
-	"start" "=" StartState startState
-	StateTransitions* transitions;
-
-syntax StartState 
-	= forkStart: ForkName fork
-	| actionStart :	ActionName action
-	;
+	"start" "=" ForkName startFork 
+	Definition* definitions ;
 
 syntax StateMachineIdentifier 
 	= normal: Name name
@@ -23,28 +18,37 @@ lexical TypeName = @category="Type" Name;
 lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]);
 
 lexical ActionName = Name name;
+lexical ChainName = @category="Chain" "_" Name name;
+lexical ForkName = Name name;
+lexical ForkTypeName = @category="MetaKeyword" Name nam;
+lexical Condition = Name name "?";
 
-lexical ForkName 
-	= normalFork: Name name "?" 
-	| sleepableFork: "#" Name name "?"
-	| @category="NonBlocking" nonBlockingFork: "!" Name name "?"
-	;
-syntax StateTransitions
-	= chain: {StateTransition "=\>"}+ transitions;
-		
-syntax StateTransition
-	= action : ActionName action 
-	| fork : ForkName name 
-	| @Foldable forkDescription: ForkName name "{" ForkConditionTransitions+ transitions  "}" 
-	; 
-	
-lexical ForkCondition = @category="MetaKeyword" ([a-zA-Z!] [a-zA-Z0-9_+\-!]* !>> [a-zA-Z0-9_+\-!]);
 
-syntax ForkConditionTransitions
-	= action: ForkCondition condition "=\>" StateTransitions transitions
+syntax Definition 
+	= @Foldable fork: ForkTypeName* forkType "fork" Name forkName "{" Action* preActions ConditionalPath+ paths "}"
+	| @Foldable namelessFork: ForkTypeName* forkType "fork" "{" Action* preActions ConditionalPath+ paths "}"
+	| @Foldable chain: "chain" ChainName name "{" Action+ actions "}"
 	;
 	
+syntax Action 
+	= action: ActionName name ";"
+	| chain: ChainName name ";"
+	| definition: Definition definition
+	;
 	
+syntax ConditionalPath 
+	= @Foldable path: Expression expr "=\>" Action+ actions
+	| @Foldable defaultPath: "default" "=\>" Action+ actions
+	;
+
+syntax Expression
+	= single: Condition con
+	| bracket "(" Expression expr ")"
+	| negate: "not" Expression expr 
+	> left and: Expression lhs "and" Expression rhs
+	> left or: Expression lhs "or" Expression rhs
+	;
+
 start syntax Coordinator = coordinator: "Coordinator" Name name Invoke* invokes;
 
 syntax Invoke = invoke: Name name "(" {ParameterValue ","}* params ")" ";"; 

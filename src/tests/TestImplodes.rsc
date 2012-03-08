@@ -9,14 +9,14 @@ import ParseTree;
 import Exception;
 
 private void iterateOverAllSDOFiles(void (loc f) perFile) {
-	sdoFiles = crawl(|project://stateduino/src/lang/StateDuino/examples/|);
+	sdoFiles = crawl(|project://stateduino/examples/|);
 	for (/file(l) <- sdoFiles, l.extension == "sdo") {
 		println("Checking <l>");
 		perFile(l);
 	}
 }
 private void iterateOverAllCSDOFiles(void (loc f) perFile) {
-	sdoFiles = crawl(|project://stateduino/src/lang/StateDuino/examples/|);
+	sdoFiles = crawl(|project://stateduino/examples/|);
 	for (/file(l) <- sdoFiles, l.extension == "csdo") {
 		println("Checking <l>");
 		perFile(l);

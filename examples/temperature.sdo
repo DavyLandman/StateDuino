@@ -1,0 +1,21 @@
+StateMachine Temperature
+start = InitializeTemperatureMeasurement
+
+sleepable fork WaitForTemperatureMeasurement {
+	ShouldStartMeasurement? =>
+		InitializeSmoothing;
+		WaitForSmoothingFinished;
+}
+
+fork WaitForSmoothingFinished {
+	ShouldSmooth? and EnoughSamplesCollected? =>
+		FillSharedState;
+		PrepareNextMeasurementRound;
+		WaitForTemperatureMeasurement;
+	ShouldSmooth? =>
+		SampleTemperature;
+		PrepareNextSmoothStep;
+		WaitForSmoothingFinished;
+	default =>
+		self;
+}
