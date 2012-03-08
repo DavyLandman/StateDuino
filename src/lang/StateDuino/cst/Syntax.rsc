@@ -3,13 +3,8 @@ module lang::StateDuino::cst::Syntax
 extend lang::std::Layout; // get comments and spaces layout for free
 
 start syntax StateMachine = stateMachine: "StateMachine" StateMachineIdentifier name
-	"start" "=" StartState startState
-	StateTransitions* transitions;
-
-syntax StartState 
-	= forkStart: ForkName fork
-	| actionStart :	ActionName action
-	;
+	"start" "=" ForkName startFork 
+	Definition* definitions ;
 
 syntax StateMachineIdentifier 
 	= normal: Name name
@@ -23,12 +18,42 @@ lexical TypeName = @category="Type" Name;
 lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]);
 
 lexical ActionName = Name name;
+lexical ChainName = @category="Chain""_" Name name;
+lexical ForkName = Name name;
+lexical Condition = Name name "?";
 
-lexical ForkName 
-	= normalFork: Name name "?" 
-	| sleepableFork: "#" Name name "?"
-	| @category="NonBlocking" nonBlockingFork: "!" Name name "?"
+
+syntax Definition 
+	= @Foldable forkDefinition: Name* forkType "fork" Name forkName ForkBody body
+	| @Foldable namelessForkDefinition: Name* forkType "fork" ForkBody body
+	| @Foldable chainDefinition: "chain" ChainName name "{" Action+ actions "}"
 	;
+	
+syntax ForkBody = body: "{" 
+		Action* preActions
+		ConditionalPath+ paths
+	"}";
+	
+syntax Action 
+	= action: ActionName name ";"
+	| chain: ChainName name ";"
+	| definition: Definition definition
+	;
+	
+syntax ConditionalPath 
+	= @Foldable path: ConditionalExpression expr "=\>" Action+ actions
+	| @Foldable defaultPath: "default" "=\>" Action+ actions
+	;
+
+syntax ConditionalExpression
+	= single: Condition con
+	| not: "not" Condition con
+	| and: ConditionalExpression lhs "&&" ConditionalExpression rhs
+	| or: ConditionalExpression lhs "||" ConditionalExpression rhs
+	| bracket "(" ConditionalExpression con ")"
+	;
+
+/*
 syntax StateTransitions
 	= chain: {StateTransition "=\>"}+ transitions;
 		
@@ -54,3 +79,4 @@ syntax ParameterValue
 	| range: "[" Number rangeStart ".." Number rangeStop "]"
 	;
 lexical Number = @category="Constant" [0-9]+ !>> [0-9];
+*/
