@@ -1,0 +1,12 @@
+StateMachine abusetest(int x, int y)
+start = X
+
+fork X {
+	checkX? => 
+		fork {
+			checkY? => self;	
+		}
+	not checkX?	=>
+		X2;
+	not checkY? and (not testY? or testX?) => stuff;
+}

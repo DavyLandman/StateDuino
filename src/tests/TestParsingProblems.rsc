@@ -36,7 +36,7 @@ public rel[loc,Tree] checkAllAmbiguities() {
 }
 
 private void iterateOverAllSDOFiles(void (loc f) perFile) {
-	csfFiles = crawl(|project://stateduino/src/lang/StateDuino/examples/|);
+	csfFiles = crawl(|project://stateduino/examples/|);
 	for (/file(l) <- csfFiles, l.extension == "sdo") {
 		println("Checking <l>");
 		perFile(l);
@@ -44,7 +44,7 @@ private void iterateOverAllSDOFiles(void (loc f) perFile) {
 }
 
 private void iterateOverAllCSDOFiles(void (loc f) perFile) {
-	csfFiles = crawl(|project://stateduino/src/lang/StateDuino/examples/|);
+	csfFiles = crawl(|project://stateduino/examples/|);
 	for (/file(l) <- csfFiles, l.extension == "csdo") {
 		println("Checking <l>");
 		perFile(l);
