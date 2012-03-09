@@ -18,7 +18,7 @@ lexical TypeName = @category="Type" Name;
 lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]);
 
 lexical ActionName = Name name;
-lexical ChainName = @category="Chain" "_" Name name;
+lexical ChainName = Name name;
 lexical ForkName = Name name;
 lexical ForkTypeName = @category="MetaKeyword" Name nam;
 lexical Condition = Name name "?";
@@ -32,7 +32,6 @@ syntax Definition
 	
 syntax Action 
 	= action: ActionName name ";"
-	| chain: ChainName name ";"
 	| definition: Definition definition
 	;
 	

@@ -4,22 +4,22 @@ start = WaitForScreenWakeUp
 sleepable fork WaitForScreenWakeUp {
 	ShouldScreenWakeUp? =>
 		WakeScreen;
-		_DrawScreen;
+		DrawScreen;
 }
 
-chain _DrawScreen {
+chain DrawScreen {
 	WriteCurrentTime;
 	immediate fork {
 		IsUpdatingTemperature? =>
 			WriteUpdateTemperatureIcon;
-			_WriteTemperature;
+			WriteTemperature;
 		default =>
 			FillFirstLineWithSpaces;
-			_WriteTemperature;
+			WriteTemperature;
 	}
 }
 
-chain _WriteTemperature {
+chain WriteTemperature {
 	WriteTemperature;
 	immediate fork {
 		IsUpdatingTemperature?	=>
@@ -32,7 +32,7 @@ chain _WriteTemperature {
 }
 
 fork WaitForRedraw {
-	ShouldRedraw? => _DrawScreen;
+	ShouldRedraw? => DrawScreen;
 	ShouldSleep? => WaitForScreenWakeUp;
 	default => WaitForRedraw;
 }

@@ -15,21 +15,21 @@ fork WaitForTemperatureSend {
 		WaitForScheduleReceiving;
 	HasTemperatureSendingTimeoutPassed? => 
 		MarkTimeout;
-		_PowerDownEthernet;
+		PowerDownEthernet;
 }
 	
 fork WaitForScheduleReceiving {
 	RecvAndSendPackets; // always perform this
 	WasScheduleReceived? =>
 		FillSharedState;
-		_PowerDownEthernet;
+		PowerDownEthernet;
 	HasScheduleReceivingTimeoutPassed? => 
 		MarkTimeout;
-		_PowerDownEthernet;
+		PowerDownEthernet;
 }
 
-chain _PowerDownEthernet {
-	PowerDownEthernet;
+chain PowerDownEthernet {
+	DoPowerDownEthernet;
 	InitializeNextCommunicationRound;
 	WaitForCommunicationTimeOutPassed;
 }		

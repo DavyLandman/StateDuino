@@ -17,7 +17,6 @@ data Definition
 	
 data Action
 	= action(str name)
-	| chain(str name)
 	| definition(Definition definition)
 	;
 	
