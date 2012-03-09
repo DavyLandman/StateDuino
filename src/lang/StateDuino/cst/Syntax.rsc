@@ -50,10 +50,6 @@ syntax Expression
 
 start syntax Coordinator = coordinator: "Coordinator" Name name Invoke* invokes;
 
-syntax Invoke = invoke: Name name "(" {ParameterValue ","}* params ")" ";"; 
+syntax Invoke = invoke: Name name "(" {Number ","}* params ")" ";"; 
 
-syntax ParameterValue
-	= normal: Number n
-	| range: "[" Number rangeStart ".." Number rangeStop "]"
-	;
 lexical Number = @category="Constant" [0-9]+ !>> [0-9];

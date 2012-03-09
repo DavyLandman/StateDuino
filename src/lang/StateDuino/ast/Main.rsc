@@ -35,12 +35,7 @@ data Expression
 	
 data Coordinator = coordinator(str name, list[Invoke] invokes);
 
-data Invoke = invoke(str name, list[ParameterValue] params);
-
-data ParameterValue
-	= normal(int number)
-	| range(int startRange, int stopRange)
-	;
+data Invoke = invoke(str name, list[int] params);
 	
 anno loc StateMachine@location;
 anno loc StateMachineIdentifier@location;
@@ -51,4 +46,3 @@ anno loc ConditionalPath@location;
 anno loc Expression@location;
 anno loc Coordinator@location;
 anno loc Invoke@location;
-anno loc ParameterValue@location;
