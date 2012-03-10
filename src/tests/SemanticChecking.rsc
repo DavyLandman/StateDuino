@@ -54,8 +54,7 @@ public test bool testInvalidTypes() {
 }
 
 public test bool testValidStateTransitionChain() {
-	set[Message] messages = runFastCheckOn("StateMachine Test start = T1 T1=\>T2=\>T3? { yes =\> T1 }");
-	return size(messages) == 0;
+	return verifyContainsNoErrorMessages("StateMachine Test start = T1 fork T1 { c1? =\> A2; T1; }");
 }
 
 private bool checkInvalidTransitionChain(str inp, str forkName) {
@@ -63,11 +62,22 @@ private bool checkInvalidTransitionChain(str inp, str forkName) {
 		"A fork (<forkName>) cannot be followed by another action or fork."
 		);
 }
-public test bool testInvalidStateTransitionChain() {
-	return checkInvalidTransitionChain("StateMachine Test start = T1 T1=\>T2=\>T3?=\>T4", "T3?");
+private bool verifyInvalidTransitionChain(str inp, str forkName) {
+	return verifyContainsErrorMessage(inp,
+		"A fork (<forkName>) cannot be followed by another action or fork."
+		);
+}
+public test bool testInvalidActionChain() {
+	return checkInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> fork T3 { c1? =\> T1; } T1; }", "T3");
+}
+public test bool testInvalidActionChain2() {
+	return checkInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> fork { c1? =\> T1; } T1; }", "nameless");
+}
+public test bool testInvalidActionChain3() {
+	return checkContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> chain X { T1; } T1; }", "Nested chains (X) are not allowed");
 }
 public test bool testInvalidStateTransitionChain2() {
-	return checkInvalidTransitionChain("StateMachine Test start = T1 T1=\>T2=\>T3? { yes =\> T5 } =\>T4", "T3?");
+	return verifyInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> T3; T4; } fork T3 { default =\> T1; }", "T3");
 }
 public test bool testInvalidStateTransitionChain3() {
 	return checkInvalidTransitionChain("StateMachine Test start = T3? T3? { yes =\> T5 } =\>T4", "T3?");

@@ -17,6 +17,9 @@ public set[Message] fastCheck(StateMachine sm) {
 			if (! (name in validParameterTypes)) {
 				result += {error("Type <name> is not supported",p@location)};
 			}
+		case path(_, [_*, definition(def), followingDefinition:_, _*]) :
+			result += {error("A fork (<def.name? "nameless">) cannot be followed by another action or fork.", def@location)};
+			/*
 		case chain([_*,f:fork(_), a:_, _*]) :  
 			result += getInvalidForkChainMessage(f, a);
 		case chain([_*, f:forkDescription(_,_), a:_, _*]) : 
@@ -33,11 +36,30 @@ public set[Message] fastCheck(StateMachine sm) {
 				set[str] invalidConditions = domain(defined) - validForkConditions;
 				result += {error("Fork condition <con> is not valid", defined[con]) | con <- invalidConditions};
 			}
+			*/
 			
 	};
 	return result;
 }
+public set[Message] fullCheck(StateMachine sm) {
+	set[Message] result = fastCheck(sm);
+	result += checkForInvalidActionSequences(sm);
+	return result;	
+}
 
+
+private set[Message] checkForInvalidActionSequences(StateMachine sm) {
+	set[str] definedForks = {name | /fork(_,name, _, _) := sm};
+	set[Message] result ={};
+	visit(sm) {
+		case path(_, [prefixChain:_*, _]):
+			for (a:action(name) <- prefixChain, name in definedForks) {
+				result += {error("A fork (<name>) cannot be followed by another action or fork.", a@location)};
+			}
+	}
+	return result;
+}
+/*
 public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);
 	result += checkForSingleChains(sm);
@@ -146,3 +168,4 @@ private loc joinLoc(loc left, loc right) {
 	result = result[end = right.end];
 	return result;
 }
+*/
