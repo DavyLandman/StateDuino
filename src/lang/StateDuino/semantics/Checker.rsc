@@ -58,7 +58,7 @@ private set[Message] checkForInvalidActionSequences(StateMachine sm) {
 	set[str] definedForks = {name | /fork(_,name, _, _) := sm};
 	set[Message] result ={};
 	visit(sm) {
-		case path(_, [prefixChain:_*, _]):
+		case path(_, [list[Action] prefixChain, _]):
 			for (a:action(name) <- prefixChain, name in definedForks) {
 				result += {error("A fork (<name>) cannot be followed by another action or fork.", a@location)};
 			}
