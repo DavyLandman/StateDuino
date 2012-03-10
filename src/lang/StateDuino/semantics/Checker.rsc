@@ -24,8 +24,18 @@ public set[Message] fastCheck(StateMachine sm) {
 			else if (size(followingDefinition) > 0) {
 				result += {error("A fork (<def.name? "nameless">) cannot be followed by another action or fork.", def@location)};
 			}
-		case f:fork(_, _, _, []) : result += {emptyBodyMessage(f)};
-		case f:namelessFork(_, _, []) : result += {emptyBodyMessage(f)};
+		case f:fork(types, _, _, paths) : {
+				result += {error("Fork type <t> is not supported", f@location) | t <- types, !(t in validForkTypes)};
+				if (size(paths) == 0) {
+					result += {emptyBodyMessage(f)};
+				}
+			}
+		case f:namelessFork(types, _, paths) : {
+				result += {error("Fork type <t> is not supported", f@location) | t <- types, !(t in validForkTypes)};
+				if (size(paths) == 0) {
+					result += {emptyBodyMessage(f)};
+				}
+			}
 		case c:chain(_, []) : result += {emptyBodyMessage(c)};
 		case p:path(_, []) : result += {emptyBodyMessage(p)};
 		case p:defaultPath(_, []) : result += {emptyBodyMessage(p)};

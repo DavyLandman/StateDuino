@@ -53,6 +53,13 @@ public test bool testInvalidTypes() {
 		);
 }
 
+
+public test bool testInvalidForkTypes() {
+	return checkContainsErrorMessage("StateMachine Test(xxx invalid) start = T1 slep fork T1 { c1? =\> T1; }",
+		"Fork type slep is not supported"
+		);
+}
+
 public test bool testValidStateTransitionChain() {
 	return verifyContainsNoErrorMessages("StateMachine Test start = T1 fork T1 { c1? =\> A2; T1; }");
 }

@@ -7,7 +7,7 @@ public set[str] validParameterTypes =
 		"int8", "int16", "int32"
 	};
 	
-public set[str] validForkConditions =
+public set[str] validForkTypes =
 	{
-		"yes", "no", "!"	
+		"sleepable", "intermediate" 	
 	};
