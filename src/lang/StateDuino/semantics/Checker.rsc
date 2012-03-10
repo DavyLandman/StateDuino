@@ -29,25 +29,6 @@ public set[Message] fastCheck(StateMachine sm) {
 		case c:chain(_, []) : result += {emptyBodyMessage(c)};
 		case p:path(_, []) : result += {emptyBodyMessage(p)};
 		case p:defaultPath(_, []) : result += {emptyBodyMessage(p)};
-			/*
-		case chain([_*,f:fork(_), a:_, _*]) :  
-			result += getInvalidForkChainMessage(f, a);
-		case chain([_*, f:forkDescription(_,_), a:_, _*]) : 
-			result += getInvalidForkChainMessage(f, a);
-			
-		case forkDescription(_, conditions) : {
-				map[str, loc] defined = ();
-				for (a:action(condition,_) <- conditions) {
-					if (defined[condition]?) {
-						result += {error("Fork condition <condition> is already defined", a@location)};		
-					}
-					defined[condition] = a@location;
-				}
-				set[str] invalidConditions = domain(defined) - validForkConditions;
-				result += {error("Fork condition <con> is not valid", defined[con]) | con <- invalidConditions};
-			}
-			*/
-			
 	};
 	return result;
 }
