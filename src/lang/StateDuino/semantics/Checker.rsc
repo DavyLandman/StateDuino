@@ -17,8 +17,14 @@ public set[Message] fastCheck(StateMachine sm) {
 			if (! (name in validParameterTypes)) {
 				result += {error("Type <name> is not supported",p@location)};
 			}
-		case path(_, [_*, definition(def), followingDefinition:_, _*]) :
-			result += {error("A fork (<def.name? "nameless">) cannot be followed by another action or fork.", def@location)};
+		case path(_, [_*, definition(def), list[Action] followingDefinition]) :
+			if (c:chain(_,_) := def) {
+				result += {error("You cannot nest a chain (<c.name>).", c@location)};
+			} 
+			else if (size(followingDefinition) > 0) {
+				result += {error("A fork (<def.name? "nameless">) cannot be followed by another action or fork.", def@location)};
+			}
+		
 			/*
 		case chain([_*,f:fork(_), a:_, _*]) :  
 			result += getInvalidForkChainMessage(f, a);

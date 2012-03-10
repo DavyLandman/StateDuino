@@ -68,13 +68,16 @@ private bool verifyInvalidTransitionChain(str inp, str forkName) {
 		);
 }
 public test bool testInvalidActionChain() {
-	return checkInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> fork T3 { c1? =\> T1; } T1; }", "T3");
+	return checkInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> fork T3 { c1? =\> T1; } A2; T1; }", "T3");
 }
 public test bool testInvalidActionChain2() {
 	return checkInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> fork { c1? =\> T1; } T1; }", "nameless");
 }
 public test bool testInvalidActionChain3() {
-	return checkContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> chain X { T1; } T1; }", "Nested chains (X) are not allowed");
+	return checkContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> chain X { T1; } T1; }", "You cannot nest a chain (X).");
+}
+public test bool testInvalidActionChain4() {
+	return checkContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> chain X { T1; } }", "You cannot nest a chain (X).");
 }
 public test bool testInvalidStateTransitionChain2() {
 	return verifyInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> T3; T4; } fork T3 { default =\> T1; }", "T3");
