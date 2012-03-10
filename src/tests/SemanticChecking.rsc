@@ -82,9 +82,23 @@ public test bool testInvalidActionChain4() {
 public test bool testInvalidActionChain5() {
 	return checkContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> X; } chain X { chain Y { T1; } }", "You cannot nest a chain (Y).");
 }
+public test bool testEmptyBody() {
+	return checkContainsErrorMessage("StateMachine Test start = T1 fork T1 { }", "You must define at least one condition for T1.");
+}
+public test bool testEmptyBody2() {
+	return checkContainsErrorMessage("StateMachine Test start = T1 fork T1 { A1; }", "You must define at least one condition for T1.");
+}
+public test bool testEmptyBody3() {
+	return checkContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> }", "You must define at least one action for condition.");
+}
+public test bool testEmptyBody4() {
+	return checkContainsErrorMessage("StateMachine Test start = X chain X { }", "You must define at least one action for X.");
+}
 public test bool testInvalidStateTransitionChain2() {
 	return verifyInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> T3; T4; } fork T3 { default =\> T1; }", "T3");
 }
+
+
 public test bool testInvalidStateTransitionChain3() {
 	return checkInvalidTransitionChain("StateMachine Test start = T3? T3? { yes =\> T5 } =\>T4", "T3?");
 }

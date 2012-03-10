@@ -24,7 +24,11 @@ public set[Message] fastCheck(StateMachine sm) {
 			else if (size(followingDefinition) > 0) {
 				result += {error("A fork (<def.name? "nameless">) cannot be followed by another action or fork.", def@location)};
 			}
-		
+		case f:fork(_, _, _, []) : result += {emptyBodyMessage(f)};
+		case f:namelessFork(_, _, []) : result += {emptyBodyMessage(f)};
+		case c:chain(_, []) : result += {emptyBodyMessage(c)};
+		case p:path(_, []) : result += {emptyBodyMessage(p)};
+		case p:defaultPath(_, []) : result += {emptyBodyMessage(p)};
 			/*
 		case chain([_*,f:fork(_), a:_, _*]) :  
 			result += getInvalidForkChainMessage(f, a);
@@ -47,6 +51,17 @@ public set[Message] fastCheck(StateMachine sm) {
 	};
 	return result;
 }
+private Message emptyBodyMessage(Definition def) {
+	if (chain(_,_) := def) {
+		return emptyBodyMessage(def.name, "action", def@location);
+	}
+	return emptyBodyMessage(def.name? "nameless", "condition", def@location);
+}
+private Message emptyBodyMessage(ConditionalPath pth) 
+	= emptyBodyMessage("condition", "action", pth@location);
+	
+private Message emptyBodyMessage(str name, str missing, loc l) = error("You must define at least one <missing> for <name>.", l);
+
 public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);
 	result += checkForInvalidActionSequences(sm);
