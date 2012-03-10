@@ -98,22 +98,23 @@ public test bool testInvalidStateTransitionChain2() {
 	return verifyInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> T3; T4; } fork T3 { default =\> T1; }", "T3");
 }
 
-
-public test bool testInvalidStateTransitionChain3() {
-	return checkInvalidTransitionChain("StateMachine Test start = T3? T3? { yes =\> T5 } =\>T4", "T3?");
-}
-public test bool testInvalidStateTransitionChain4() {
-	return checkInvalidTransitionChain("StateMachine Test start = T3? T3?=\>T4", "T3?");
-}
-public test bool testInvalidStateTransitionChain5() {
-	return checkInvalidTransitionChain("StateMachine Test start = T3? T3?=\>T4=\>T5", "T3?");
-}
-
-public test bool testInvalidForkConditions() {
-	return checkContainsErrorMessage("StateMachine Test start = T? T? { yes =\> T1 yes =\> T1 }",
-		"Fork condition yes is already defined"
+// these tests need some formal boolean checking stuff!
+public test bool unreachableBooleanCondition() {
+	return verifyContainsErrorMessage("StateMachine Test start = F1 fork F1 { c1? =\> F1; c1? and c2? =\> A1; F1; } ",
+		"This condition will never match since previous conditions would have already matched"
 		);
 }
+public test bool unreachableBooleanCondition2() {
+	return verifyContainsErrorMessage("StateMachine Test start = F1 fork F1 { c1? and not c1? =\> A1; F1; } ",
+		"This condition can never be true"
+		);
+}
+public test bool unreachableBooleanCondition3() {
+	return verifyContainsErrorMessage("StateMachine Test start = F1 fork F1 { c1? or not c1? =\> F1; c2? =\> A1; F1; } ",
+		"This condition will never match since previous conditions would always match"
+		);
+}
+
 public test bool testInvalidForkConditionsName() {
 	return checkContainsErrorMessage("StateMachine Test start = T? T? { ys =\> T1 no =\> T1 }",
 		"Fork condition ys is not valid"
