@@ -25,9 +25,9 @@ lexical Condition = Name name "?";
 
 
 syntax Definition 
-	= @Foldable fork: ForkTypeName* forkType "fork" Name forkName "{" Action* preActions ConditionalPath+ paths "}"
-	| @Foldable namelessFork: ForkTypeName* forkType "fork" "{" Action* preActions ConditionalPath+ paths "}"
-	| @Foldable chain: "chain" ChainName name "{" Action+ actions "}"
+	= @Foldable fork: ForkTypeName* forkType "fork" Name forkName "{" Action* preActions ConditionalPath* paths "}"
+	| @Foldable namelessFork: ForkTypeName* forkType "fork" "{" Action* preActions ConditionalPath* paths "}"
+	| @Foldable chain: "chain" ChainName name "{" Action* actions "}"
 	;
 	
 syntax Action 
@@ -36,8 +36,8 @@ syntax Action
 	;
 	
 syntax ConditionalPath 
-	= @Foldable path: Expression expr "=\>" Action+ actions
-	| @Foldable defaultPath: "default" "=\>" Action+ actions
+	= @Foldable path: Expression expr "=\>" Action* actions
+	| @Foldable defaultPath: "default" "=\>" Action* actions
 	;
 
 syntax Expression
