@@ -94,8 +94,30 @@ public test bool testEmptyBody3() {
 public test bool testEmptyBody4() {
 	return checkContainsErrorMessage("StateMachine Test start = X chain X { }", "You must define at least one action for X.");
 }
-public test bool testInvalidStateTransitionChain2() {
+public test bool testInvalidChainWithForkReference() {
 	return verifyInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> T3; T4; } fork T3 { default =\> T1; }", "T3");
+}
+
+private bool verifyDoesntEndInFork(str inp, str wrongEnd) {
+	return verifyContainsErrorMessage(inp,
+		"<wrongEnd> does not end in a fork."
+		);
+}
+
+public test bool testEveryThingEndsWithAFork() {
+	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> A1; A2; }", "A2");
+}
+public test bool testEveryThingEndsWithAFork2() {
+	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> A1; } chain A1 { A2; } chain A2 { A3; }", "A3");
+}
+public test bool testEveryThingEndsWithAFork3() {
+	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> A1; } chain A1 { A2; } chain A2 { A1; }", "A1");
+}
+public test bool testEveryThingEndsWithAFork4() {
+	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> intermediate fork T2 { c2? =\> T2 } }", "T2");
+}
+public test bool testEveryThingEndsWithAFork5() {
+	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> intermediate fork T2 { c2? =\> C2 } } chain C2 { A1; }", "A1");
 }
 
 // these tests need some formal boolean checking stuff!
