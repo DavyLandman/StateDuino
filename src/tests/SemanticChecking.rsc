@@ -79,6 +79,9 @@ public test bool testInvalidActionChain3() {
 public test bool testInvalidActionChain4() {
 	return checkContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> chain X { T1; } }", "You cannot nest a chain (X).");
 }
+public test bool testInvalidActionChain5() {
+	return checkContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> X; } chain X { chain Y { T1; } }", "You cannot nest a chain (Y).");
+}
 public test bool testInvalidStateTransitionChain2() {
 	return verifyInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> T3; T4; } fork T3 { default =\> T1; }", "T3");
 }

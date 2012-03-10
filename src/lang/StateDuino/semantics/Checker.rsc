@@ -17,7 +17,7 @@ public set[Message] fastCheck(StateMachine sm) {
 			if (! (name in validParameterTypes)) {
 				result += {error("Type <name> is not supported",p@location)};
 			}
-		case path(_, [_*, definition(def), list[Action] followingDefinition]) :
+		case [_*, definition(def), list[Action] followingDefinition]:
 			if (c:chain(_,_) := def) {
 				result += {error("You cannot nest a chain (<c.name>).", c@location)};
 			} 
