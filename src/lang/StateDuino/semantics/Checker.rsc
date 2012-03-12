@@ -22,7 +22,7 @@ public set[Message] fastCheck(StateMachine sm) {
 				result += {error("You cannot nest a chain (<c.name>).", c@location)};
 			} 
 			else if (size(followingDefinition) > 0) {
-				result += {error("A fork (<def.name? "nameless">) cannot be followed by another action or fork.", def@location)};
+				result += {error("There should be no more actions after a call to a fork (<def.name? "nameless">).", def@location)};
 			}
 		case f:fork(types, _, _, paths) : {
 				result += {error("Fork type <t> is not supported", f@location) | t <- types, !(t in validForkTypes)};
@@ -66,7 +66,7 @@ private set[Message] checkForInvalidActionSequences(StateMachine sm) {
 	visit(sm) {
 		case path(_, [list[Action] prefixChain, _]):
 			for (a:action(name) <- prefixChain, name in definedForks) {
-				result += {error("A fork (<name>) cannot be followed by another action or fork.", a@location)};
+				result += {error("There should be no more actions after a call to a fork (<name>).", a@location)};
 			}
 	}
 	return result;

@@ -66,12 +66,12 @@ public test bool testValidStateTransitionChain() {
 
 private bool checkInvalidTransitionChain(str inp, str forkName) {
 	return checkContainsErrorMessage(inp,
-		"A fork (<forkName>) cannot be followed by another action or fork."
+		"There should be no more actions after a call to a fork (<forkName>)."
 		);
 }
 private bool verifyInvalidTransitionChain(str inp, str forkName) {
 	return verifyContainsErrorMessage(inp,
-		"A fork (<forkName>) cannot be followed by another action or fork."
+		"There should be no more actions after a call to a fork (<forkName>)."
 		);
 }
 public test bool testInvalidActionChain() {
