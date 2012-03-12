@@ -144,114 +144,26 @@ public test bool unreachableBooleanCondition3() {
 		);
 }
 
-public test bool testInvalidForkConditionsName() {
-	return checkContainsErrorMessage("StateMachine Test start = T? T? { ys =\> T1 no =\> T1 }",
-		"Fork condition ys is not valid"
-		);
-}
-
-public test bool testSingleActionNotAllowed() {
-	return verifyContainsErrorMessage("StateMachine Test start = T1 T1 ",
-		"Single action T1 has no path to follow"
-		);
-}
-public test bool testSingleActionNotAllowed2() {
-	return verifyContainsErrorMessage("StateMachine Test start = T1? T1? ",
-		"Single fork T1? has no path to follow"
-		);
-}
-public test bool testSingleActionNotAllowed2() {
-	return verifyNotContainsErrorMessage("StateMachine Test start = T1? T1? { yes =\> T2 } T2 =\> T1? ",
-		"Single action T2 has no path to follow"
-		);
-}
-
 public test bool testUndefinedStart() {
 	return verifyContainsErrorMessage("StateMachine Test start = T1",
 		"T1 is undefined"
 		);
 }
 
-public test bool testUndefinedEnd() {
-	return verifyContainsErrorMessage("StateMachine Test start = T1 T1 =\> T4 =\> T2",
-		"T2 is undefined"
-		);
-}
-
-public test bool testUndefinedEnd2() {
-	return verifyContainsErrorMessage("StateMachine Test start = T1 T1 =\> T2?",
-		"T2? is undefined"
-		);
-}
-public test bool testUndefinedEnd3() {
-	return verifyContainsErrorMessage("StateMachine Test start = T1 T1 =\> T2 T2 =\> T3",
-		"T3 is undefined"
-		);
-}
-
 public test bool testAlreadyDefine() {
-	return verifyContainsErrorMessage("StateMachine Test start = T1 T1 =\> T2 T1 =\> T2",
+	return verifyContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> T1; } fork T1 { c2? =\> T1; }",
 		"T1 is already defined"
 		);
 }
 public test bool testAlreadyDefine2() {
-	return verifyContainsErrorMessage("StateMachine Test start = T1? T1? { yes =\> T1? } T1? { yes =\> T1? }",
-		"T1? is already defined"
+	return verifyContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> C1; } chain C1 { T1; } chain C1 { T1; }",
+		"C1 is already defined"
 		);
 }
 
 public test bool testSingleDefineWork() {
-	return verifyContainsNoErrorMessages("StateMachine Test start = T1 T1 =\> T2? T2? { yes =\> T3} T3 =\> T1");
+	return verifyContainsNoErrorMessages("StateMachine Test start = T1 fork T1 {c1? =\> T2;} fork T2 { c2? =\> T3; } chain T3 { T1; }");
 }
-public test bool testSingleDefineWork2() {
-	return verifyContainsNoErrorMessages("StateMachine Test start = T1 T1 =\> T2? T2? { yes =\> T1 } ");
-}
-
-public test bool testNotTerminating() {
-	return verifyContainsErrorMessage("StateMachine Test start = T1 T1 =\> T2 =\> T1",
-		"T1 will never terminate, you should end in a Fork"
-		);
-}
-public test bool testNotTerminating2() {
-	return verifyContainsErrorMessage("StateMachine Test start = T1 T1 =\> !T2? !T2? { yes=\> T1 }",
-		"T1 will never terminate, you should end in a Fork"
-		);
-}
-public test bool testNotTerminating3() {
-	return verifyContainsErrorMessage("StateMachine Test start = T1 T1 =\> T2? 
-		!T2? { 
-			yes=\> !T3? {
-				yes =\> T1		
-			} 
-		}",
-		"T1 will never terminate, you should end in a Fork"
-		);
-}
-
-public test bool testWillTerminate() {
-	return verifyNotContainsErrorMessage("StateMachine Test start = T1 T1 =\> !T2? !T2? { yes=\> T1 no =\> T4?} T4? { yes =\> T1 }",
-		"T1 will never terminate, you should end in a Fork"
-		);
-}
-public test bool testWillTerminate2() {
-	return verifyNotContainsErrorMessage("StateMachine Test start = T1 T1 =\> !T2?
-	!T2? { 
-		yes=\> T1 
-		no =\> !T4? { 
-			yes =\> T1
-			no =\> T5?
-		}
-	}
-	T5? { yes =\> T1 } ",
-		"T1 will never terminate, you should end in a Fork"
-		);
-}
-
-public test bool testWillTerminate3() {
-	return verifyNotContainsErrorMessage("StateMachine Test start = T1 T1 =\> T2? { 
-		yes=\> T1 
-	}
-	",
-		"T1 will never terminate, you should end in a Fork"
-		);
+public test bool testNestedDefineWorks() {
+	return verifyContainsNoErrorMessages("StateMachine Test start = T1 fork T1 { c1? =\> fork T1 { c2? =\> T1; } }");
 }
