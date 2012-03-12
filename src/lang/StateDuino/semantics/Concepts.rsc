@@ -9,5 +9,5 @@ public set[str] validParameterTypes =
 	
 public set[str] validForkTypes =
 	{
-		"sleepable", "intermediate" 	
+		"sleepable", "immediate" 	
 	};
