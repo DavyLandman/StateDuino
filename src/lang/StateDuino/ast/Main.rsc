@@ -1,6 +1,8 @@
 module lang::StateDuino::ast::Main
 
-data StateMachine = stateMachine(StateMachineIdentifier name,  str startFork, list[Definition] definitions);
+data StateMachine = stateMachine(StateMachineIdentifier name, Name startFork, list[Definition] definitions);
+
+data Name = name(str name);
 
 data StateMachineIdentifier 
 	= normal(str name)
@@ -10,9 +12,9 @@ data StateMachineIdentifier
 data Parameter = param(str \type, str name);
 
 data Definition 
-	= fork(list[str] forkType, str name, list[Action] preActions, list[ConditionalPath] paths)
-	| namelessFork(list[str] forkType, list[Action] preActions, list[ConditionalPath] paths)
-	| chain(str name, list[Action] actions)
+	= fork(list[Name] forkType, Name name, list[Action] preActions, list[ConditionalPath] paths)
+	| namelessFork(list[Name] forkType, list[Action] preActions, list[ConditionalPath] paths)
+	| chain(Name name, list[Action] actions)
 	;
 	
 data Action
@@ -46,3 +48,4 @@ anno loc ConditionalPath@location;
 anno loc Expression@location;
 anno loc Coordinator@location;
 anno loc Invoke@location;
+anno loc Name@location;

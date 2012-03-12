@@ -3,7 +3,7 @@ module lang::StateDuino::cst::Syntax
 extend lang::std::Layout; // get comments and spaces layout for free
 
 start syntax StateMachine = stateMachine: "StateMachine" StateMachineIdentifier name
-	"start" "=" ForkName startFork 
+	"start" "=" Name startFork 
 	Definition* definitions ;
 
 syntax StateMachineIdentifier 
@@ -15,23 +15,19 @@ syntax Parameter = param: TypeName type ParamName name;
 lexical ParamName = @category="Variable" Name;
 lexical TypeName = @category="Type" Name;
 
-lexical Name = ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]);
+lexical Name = name: ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]);
 
-lexical ActionName = Name name;
-lexical ChainName = Name name;
-lexical ForkName = Name name;
-lexical ForkTypeName = @category="MetaKeyword" Name nam;
 lexical Condition = Name name "?";
 
 
 syntax Definition 
-	= @Foldable fork: ForkTypeName* forkType "fork" Name forkName "{" Action* preActions ConditionalPath* paths "}"
-	| @Foldable namelessFork: ForkTypeName* forkType "fork" "{" Action* preActions ConditionalPath* paths "}"
-	| @Foldable chain: "chain" ChainName name "{" Action* actions "}"
+	= @Foldable fork: Name* forkType "fork" Name forkName "{" Action* preActions ConditionalPath* paths "}"
+	| @Foldable namelessFork: Name* forkType "fork" "{" Action* preActions ConditionalPath* paths "}"
+	| @Foldable chain: "chain" Name name "{" Action* actions "}"
 	;
 	
 syntax Action 
-	= action: ActionName name ";"
+	= action: Name name ";"
 	| definition: Definition definition
 	;
 	

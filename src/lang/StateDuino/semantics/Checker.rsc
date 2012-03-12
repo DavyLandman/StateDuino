@@ -19,19 +19,19 @@ public set[Message] fastCheck(StateMachine sm) {
 			}
 		case [_*, definition(def), list[Action] followingDefinition]:
 			if (c:chain(_,_) := def) {
-				result += {error("You cannot nest a chain (<c.name>).", c@location)};
+				result += {error("You cannot nest a chain (<c.name.name>).", c.name@location)};
 			} 
 			else if (size(followingDefinition) > 0) {
-				result += {error("There should be no more actions after a call to a fork (<def.name? "nameless">).", def@location)};
+				result += {error("There should be no more actions after a call to a fork (<def.name? ? def.name.name : "nameless">).", def.name? ? def.name@location : def@location)};
 			}
 		case f:fork(types, _, _, paths) : {
-				result += {error("Fork type <t> is not supported", f@location) | t <- types, !(t in validForkTypes)};
+				result += {error("Fork type <t.name> is not supported", t@location) | t <- types, !(t.name in validForkTypes)};
 				if (size(paths) == 0) {
 					result += {emptyBodyMessage(f)};
 				}
 			}
 		case f:namelessFork(types, _, paths) : {
-				result += {error("Fork type <t> is not supported", f@location) | t <- types, !(t in validForkTypes)};
+				result += {error("Fork type <t.name> is not supported", t@location) | t <- types, !(t.name in validForkTypes)};
 				if (size(paths) == 0) {
 					result += {emptyBodyMessage(f)};
 				}
@@ -44,9 +44,12 @@ public set[Message] fastCheck(StateMachine sm) {
 }
 private Message emptyBodyMessage(Definition def) {
 	if (chain(_,_) := def) {
-		return emptyBodyMessage(def.name, "action", def@location);
+		return emptyBodyMessage(def.name.name, "action", def.name@location);
 	}
-	return emptyBodyMessage(def.name? "nameless", "condition", def@location);
+	else if (namelessFork(_,_,_) := def) {
+		return emptyBodyMessage("nameless", "condition", def@location);
+	}
+	return emptyBodyMessage(def.name.name, "condition", def.name@location);
 }
 private Message emptyBodyMessage(ConditionalPath pth) 
 	= emptyBodyMessage("condition", "action", pth@location);
@@ -56,12 +59,20 @@ private Message emptyBodyMessage(str name, str missing, loc l) = error("You must
 public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);
 	result += checkForInvalidActionSequences(sm);
+	result += checkForInvalidStart(sm);
 	return result;	
 }
 
+private set[Message] checkForInvalidStart(StateMachine sm) {
+	set[str] definedForks = {nm | /fork(_,name(str nm), _, _) := sm};
+	if (sm.startFork.name in definedForks) {
+		return {};
+	}
+	return {error("<sm.startFork.name> is undefined", sm.startFork@location)};
+}
 
 private set[Message] checkForInvalidActionSequences(StateMachine sm) {
-	set[str] definedForks = {name | /fork(_,name, _, _) := sm};
+	set[str] definedForks = {nm | /fork(_,name(str nm), _, _) := sm};
 	set[Message] result ={};
 	visit(sm) {
 		case path(_, [list[Action] prefixChain, _]):
