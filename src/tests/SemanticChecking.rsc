@@ -54,12 +54,6 @@ public test bool testInvalidTypes() {
 }
 
 
-public test bool testInvalidForkTypes() {
-	return checkContainsErrorMessage("StateMachine Test(xxx invalid) start = T1 slep fork T1 { c1? =\> T1; }",
-		"Fork type slep is not supported"
-		);
-}
-
 public test bool testValidStateTransitionChain() {
 	return verifyContainsNoErrorMessages("StateMachine Test start = T1 fork T1 { c1? =\> A2; T1; }");
 }
@@ -121,10 +115,10 @@ public test bool testEveryThingEndsWithAFork3() {
 	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> A1; } chain A1 { A2; } chain A2 { A1; }", "A1");
 }
 public test bool testEveryThingEndsWithAFork4() {
-	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> intermediate fork T2 { c2? =\> T2 } }", "T2");
+	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> immediate fork T2 { c2? =\> T2 } }", "T2");
 }
 public test bool testEveryThingEndsWithAFork5() {
-	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> intermediate fork T2 { c2? =\> C2 } } chain C2 { A1; }", "A1");
+	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> immediate fork T2 { c2? =\> C2 } } chain C2 { A1; }", "A1");
 }
 
 // these tests need some formal boolean checking stuff!

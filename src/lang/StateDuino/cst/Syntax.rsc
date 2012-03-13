@@ -18,11 +18,16 @@ lexical TypeName = @category="Type" Name;
 lexical Name = name: ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]);
 
 lexical Condition = Name name "?";
+syntax ForkType 
+	= sleepable: "sleepable"
+	| immediate: "immediate"
+	;
 
+keyword ForkTypeKeyword = ForkType tp; 
 
 syntax Definition 
-	= @Foldable fork: Name* forkType "fork" Name forkName "{" Action* preActions ConditionalPath* paths "}"
-	| @Foldable namelessFork: Name* forkType "fork" "{" Action* preActions ConditionalPath* paths "}"
+	= @Foldable fork: ForkType* forkType "fork" Name forkName "{" Action* preActions ConditionalPath* paths "}"
+	| @Foldable namelessFork: ForkType* forkType "fork" "{" Action* preActions ConditionalPath* paths "}"
 	| @Foldable chain: "chain" Name name "{" Action* actions "}"
 	;
 	

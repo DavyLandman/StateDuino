@@ -8,12 +8,13 @@ data StateMachineIdentifier
 	= normal(str name)
 	| parameterized(str name, list[Parameter] params)
 	;
+data ForkType = sleepable() | immediate();
 
 data Parameter = param(str \type, str name);
 
 data Definition 
-	= fork(list[Name] forkType, Name name, list[Action] preActions, list[ConditionalPath] paths)
-	| namelessFork(list[Name] forkType, list[Action] preActions, list[ConditionalPath] paths)
+	= fork(list[ForkType] forkType, Name name, list[Action] preActions, list[ConditionalPath] paths)
+	| namelessFork(list[ForkType] forkType, list[Action] preActions, list[ConditionalPath] paths)
 	| chain(Name name, list[Action] actions)
 	;
 	
