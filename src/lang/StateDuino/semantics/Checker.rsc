@@ -24,8 +24,8 @@ public set[Message] fastCheck(StateMachine sm) {
 			else if (size(followingDefinition) > 0) {
 				result += {error("There should be no more actions after a call to a fork (<def.name? ? def.name.name : "nameless">).", def.name? ? def.name@location : def@location)};
 			}
-		case f:fork(types, _, _, []) : result += {emptyBodyMessage(f)};
-		case f:namelessFork(types, _, []) : result += {emptyBodyMessage(f)};
+		case f:fork(_, _, _, []) : result += {emptyBodyMessage(f)};
+		case f:namelessFork(_, _, []) : result += {emptyBodyMessage(f)};
 		case c:chain(_, []) : result += {emptyBodyMessage(c)};
 		case p:path(_, []) : result += {emptyBodyMessage(p)};
 		case p:defaultPath(_, []) : result += {emptyBodyMessage(p)};
