@@ -48,17 +48,19 @@ private Message emptyBodyMessage(str name, str missing, loc l) = error("You must
 
 public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);
+	sm = unNest(sm);
 	result += checkForInvalidActionSequences(sm);
 	result += checkForInvalidStart(sm);
+	result += checkForInvalidEnd(sm);
 	return result;	
 }
 
 private set[Message] checkForInvalidStart(StateMachine sm) {
-	set[str] definedForks = {nm | /fork(_,name(str nm), _, _) := sm};
-	if (sm.startFork.name in definedForks) {
+	Name target = sm.startFork;
+	if (fork(_, target, _, _) <- sm.definitions) {
 		return {};
 	}
-	return {error("<sm.startFork.name> is undefined", sm.startFork@location)};
+	return {error("<target.name> is undefined", sm.startFork@location)};
 }
 
 private set[Message] checkForInvalidActionSequences(StateMachine sm) {
@@ -72,6 +74,81 @@ private set[Message] checkForInvalidActionSequences(StateMachine sm) {
 	}
 	return result;
 }
+
+private StateMachine unNest(StateMachine sm) {
+	set[str] usedNames = {nm | fork(_,name(str nm), _, _) <- sm.definitions};
+	usedNames += {nm | chain(name(str nm), _) <- sm.definitions};
+	list[Definition] newDefinitions = [];
+	StateMachine fullUnnested = sm;
+	solve(fullUnnested) {
+		fullUnnested = visit (fullUnnested) {
+			case d:definition(f: fork(_,n:name(str nm), _, paths)) : {
+				if (nm in usedNames) {
+					while (nm in usedNames) {
+						nm += "!";
+					}
+					newName = n[name = nm];
+					usedNames += {nm};
+					f = f[paths = visit (paths) {
+						case action(n) => action(newName)
+					}];
+					f = f[name = newName];
+				}
+				newDefinitions += [f];
+				insert action(f.name.name)[@location=d@location];
+			}
+			case d:definition(f:namelessFork(types, preActions, paths)) : {
+				str nm = "nameless";	
+				while (nm in usedNames) {
+					nm += "!";
+				}
+				usedNames += {nm};
+				newName = name(nm)[@location = f.location];
+				newDefinitions += [fork(types, newName, preActions, paths)];
+				insert action(newName.name)[@location=d@location];
+			}
+			case d:definition(c:chain(n:name(str nm), _)) : {
+				if (nm in usedNames) {
+					while (nm in usedNames) {
+						nm += "!";
+					}
+					newName = n[name = nm];
+					usedNames += {nm};
+					c = c[name = newName];
+				}
+				newDefinitions += [c];
+				insert action(c.name.name)[@location=d@location];
+			}
+		};
+		fullUnnested = fullUnnested[definitions = fullUnnested.definitions + newDefinitions];
+		newDefinitions = [];
+	}
+	return fullUnnested;
+}
+
+
+private set[Message] checkForInvalidEnd(StateMachine sm) {
+	set[Message] result = {};
+	set[str] definedStarts = {};
+	rel[str end, loc req] endRequirements = {};
+	visit(sm) {
+		case [_*,a:action(nm)] : endRequirements += {<nm, a@location>};	
+		case fork(_, name(str nm), _, _) : definedStarts += {nm};
+		case chain(name(str nm), _) : definedStarts += {nm};
+	}
+	set[str] missingDefines = domain(endRequirements) - definedStarts;
+	result += {*{error("<fixName(md)> is undefined", l) | l <- endRequirements[md]} | md <- missingDefines};
+	return result;
+}
+
+private str fixName(str nm)  { 
+	if (/<pre:[^!]+>[!]+/ := nm) { 
+		return pre; 
+	}
+	else {
+		return nm;
+	}
+} 
 /*
 public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);

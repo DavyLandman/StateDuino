@@ -41,6 +41,7 @@ private bool verifyContainsNoErrorMessages(str input) {
 		return true;
 	}
 	else {
+		iprintln(input);
 		iprintln(result);
 		return false;
 	}
@@ -115,10 +116,10 @@ public test bool testEveryThingEndsWithAFork3() {
 	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> A1; } chain A1 { A2; } chain A2 { A1; }", "A1");
 }
 public test bool testEveryThingEndsWithAFork4() {
-	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> immediate fork T2 { c2? =\> T2 } }", "T2");
+	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> immediate fork T2 { c2? =\> T2; } }", "T2");
 }
 public test bool testEveryThingEndsWithAFork5() {
-	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> immediate fork T2 { c2? =\> C2 } } chain C2 { A1; }", "A1");
+	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> immediate fork T2 { c2? =\> C2; } } chain C2 { A1; }", "A1");
 }
 
 // these tests need some formal boolean checking stuff!
