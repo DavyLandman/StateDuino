@@ -103,7 +103,7 @@ private StateMachine unNest(StateMachine sm) {
 					nm += "!";
 				}
 				usedNames += {nm};
-				newName = name(nm)[@location = f.location];
+				newName = name(nm)[@location = f@location];
 				newDefinitions += [fork(types, newName, preActions, paths)];
 				insert action(newName.name)[@location=d@location];
 			}
@@ -118,6 +118,11 @@ private StateMachine unNest(StateMachine sm) {
 				}
 				newDefinitions += [c];
 				insert action(c.name.name)[@location=d@location];
+			}
+			case f:fork(_, nm, _, paths): {
+				insert f[paths = visit(paths) {
+						case a:action("self") => a[name = nm.name] 
+				}];	
 			}
 		};
 		fullUnnested = fullUnnested[definitions = fullUnnested.definitions + newDefinitions];
