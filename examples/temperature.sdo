@@ -1,5 +1,5 @@
 StateMachine Temperature
-start = InitializeTemperatureMeasurement
+start = WaitForTemperatureMeasurement
 
 sleepable fork WaitForTemperatureMeasurement {
 	ShouldStartMeasurement? =>

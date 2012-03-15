@@ -10,3 +10,11 @@ fork X {
 		X2;
 	not checkY? and (not testY? or testX?) => stuff;
 }
+
+chain stuff {
+	X;
+}
+
+immediate fork X2 {
+	checkZ? => X;
+}
