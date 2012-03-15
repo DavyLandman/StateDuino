@@ -119,10 +119,29 @@ private StateMachine unNest(StateMachine sm) {
 				newDefinitions += [c];
 				insert action(c.name.name)[@location=d@location];
 			}
-			case f:fork(_, nm, _, paths): {
-				insert f[paths = visit(paths) {
-						case a:action("self") => a[name = nm.name] 
+			case f:fork(opts, n:name(str nm), pre, paths): {
+				newF = f[paths = visit(paths) {
+						case a:action("self") => a[name = nm] 
 				}];	
+				if (newF == f) {
+					// we can now remove the preActions
+					if (size(pre) > 0) {
+						while (nm in usedNames) {
+							nm += "!";
+						}
+						newName = n[name = nm];
+						usedNames += {nm};
+						newFork = f[paths = [defaultPath(pre + [last(pre)[name=nm]])]];
+						newFork = newFork[preActions = []];
+						f = f[forkType = opts + [immediate()]];
+						f = f[name = newName];
+						newDefinitions += [ newFork];
+						insert f[preActions = []];
+					}
+				}
+				else {
+					insert newF;	
+				}
 			}
 		};
 		fullUnnested = fullUnnested[definitions = fullUnnested.definitions + newDefinitions];
