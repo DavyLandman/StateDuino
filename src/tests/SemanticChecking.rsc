@@ -6,6 +6,7 @@ import lang::StateDuino::semantics::Checker;
 import Message;
 import Set;
 import IO;
+import FileSystem;
 
 private set[Message] runFastCheckOn(str input) {
 	return fastCheck(getStateMachine(input));
@@ -161,4 +162,26 @@ public test bool testSingleDefineWork() {
 }
 public test bool testNestedDefineWorks() {
 	return verifyContainsNoErrorMessages("StateMachine Test start = T1 fork T1 { c1? =\> fork T1 { c2? =\> T1; } }");
+}
+
+
+
+private void iterateOverAllSDOFiles(void (loc f) perFile) {
+	csfFiles = crawl(|project://stateduino/examples/|);
+	for (/file(l) <- csfFiles, l.extension == "sdo") {
+		println("Checking <l>");
+		perFile(l);
+	}
+}
+
+public test bool verifyFullCheckWorks() {
+	set[Message] messages = {};
+	iterateOverAllSDOFiles(void (loc f) {
+		messages += fullCheck(getStateMachine(f));
+	});
+	if (size(messages) == 0) {
+		return true;	
+	}
+	println(messages);
+	return false;	
 }
