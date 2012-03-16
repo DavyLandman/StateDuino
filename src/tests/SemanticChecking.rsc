@@ -19,6 +19,8 @@ private bool checkContainsErrorMessage(str input, str message) {
 	if (error(message, _) <- messages) {
 		return true;
 	}
+	//iprintln(input);
+	//iprintln(messages);
 	return false;
 }
 private bool verifyContainsErrorMessage(str input, str message) {
@@ -26,11 +28,15 @@ private bool verifyContainsErrorMessage(str input, str message) {
 	if (error(message, _) <- messages) {
 		return true;
 	}
+	//iprintln(input);
+	//iprintln(messages);
 	return false;
 }
 private bool verifyNotContainsErrorMessage(str input, str message) {
 	set[Message] messages = runBigCheckOn(input);
 	if (error(message, _) <- messages) {
+		//iprintln(input);
+		//iprintln(messages);
 		return false;
 	}
 	return true;
@@ -41,11 +47,9 @@ private bool verifyContainsNoErrorMessages(str input) {
 	if (size(result) == 0) {
 		return true;
 	}
-	else {
-		iprintln(input);
-		iprintln(result);
-		return false;
-	}
+	//iprintln(input);
+	//iprintln(result);
+	return false;
 }
 
 
@@ -99,6 +103,9 @@ public test bool testEmptyBody4() {
 }
 public test bool testInvalidChainWithForkReference() {
 	return verifyInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> T3; T4; } fork T3 { default =\> T1; }", "T3");
+}
+public test bool testInvalidPreChainWithForkReference() {
+	return verifyInvalidTransitionChain("StateMachine Test start = T1 fork T1 { T1; c1? =\> T1; } ", "T1");
 }
 
 private bool verifyDoesntEndInFork(str inp, str wrongEnd) {

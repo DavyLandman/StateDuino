@@ -57,12 +57,12 @@ public set[Message] fullCheck(StateMachine sm) {
 
 
 private set[Message] checkForInvalidActionSequences(StateMachine sm) {
-	set[str] definedForks = {nm | /fork(_,name(str nm), _, _) := sm};
+	set[str] definedForks = {nm | fork(_,name(str nm), _, _) <- sm.definitions};
 	set[Message] result ={};
 	visit(sm) {
-		case path(_, [list[Action] prefixChain, _]):
-			for (a:action(name) <- prefixChain, name in definedForks) {
-				result += {error("There should be no more actions after a call to a fork (<name>).", a@location)};
+		case [list[Action] prefixChain, _]:
+			for (a:action(nm) <- prefixChain, nm in definedForks) {
+				result += {error("There should be no more actions after a call to a fork (<fixName(nm)>).", a@location)};
 			}
 	}
 	return result;
