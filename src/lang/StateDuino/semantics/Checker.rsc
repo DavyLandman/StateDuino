@@ -167,17 +167,14 @@ private set[Message] checkForAlreadyDefinedNames(StateMachine sm) {
 }
 
 private set[Message] checkForInvalidEnd(StateMachine sm) {
-	set[Message] result = {};
 	set[str] definedStarts = {};
 	rel[str end, loc req] endRequirements = {};
-	visit(sm) {
+	visit(sm.definitions) {
 		case [_*,a:action(nm)] : endRequirements += {<nm, a@location>};	
-		case fork(_, name(str nm), _, _) : definedStarts += {nm};
-		case chain(name(str nm), _) : definedStarts += {nm};
+		case name(str nm) : definedStarts += {nm};
 	}
 	set[str] missingDefines = domain(endRequirements) - definedStarts;
-	result += {*{error("<fixName(md)> is undefined", l) | l <- endRequirements[md]} | md <- missingDefines};
-	return result;
+	return {*{error("<fixName(md)> is undefined", l) | l <- endRequirements[md]} | md <- missingDefines};
 }
 
 private str fixName(str nm)  { 
