@@ -10,28 +10,43 @@ import lang::StateDuino::ast::Main;
 public StateMachine simplify(StateMachine complex) {
 	StateMachine result = complex;
 	result = nestActions(result);
-	result = unnestForks(result);
-	result = removeMainActions(result);
+	//result = unnestForks(result);
+	//result = removeMainActions(result);
 	return result;
 }
 
 private StateMachine nestActions(StateMachine complex) {
-	map[str, StateTransitions] globalActions = ();
-	for (c:chain([action(firstName), rest:_*]) <- complex.transitions) {
-		if (chain([before:_*, forkDescription(forkName,_)]) := c) {
-			// remove the fork description for this chain to avoid nested fork descriptions
-			c = chain([before, fork(forkName)]);
+	map[str, list[Action]] chainActions = ( m : p | chain(name(m), p) <- complex.definitions);
+	Definition replaceActions(Definition def, set[str] nestedForkNames) {
+		list[ConditionalPath] newPaths = [];
+		for (p <- def.paths) {
+			list[Action] newActions= [];
+			for (a <- p.actions) {
+				switch(a) {
+					case action(nm): 
+						if (!(nm in nestedForkNames) && chainActions[nm]?) {
+							newActions += chainActions[nm];	
+						}	
+						else {
+							newActions += [a];	
+						}
+					case d:definition(f) : {
+						newActions += [d[definition = replaceActions(f, nestedForkNames + (f.name? ? {f.name.name} : {}))]];	
+					}
+				}
+			}
+			newPaths += [p[actions = newActions]];
 		}
-		globalActions[firstName] = c;		
+		return def[paths= newPaths];
+	};	
+	list[Definition] newDefinitions = [];
+	for (d <- complex.definitions) {
+		switch(d) {
+			case c:chain(_,_): newDefinitions += [c];
+			case f:fork(_,_,_,_): newDefinitions += [replaceActions(f, {})];
+		}	
 	}
-	StateMachine nested = complex;
-	solve(nested) {
-		nested = visit(nested) {
-			case c:chain([_*,action(actionName)]) =>
-				chain(prefix(c.transitions) + (globalActions[actionName].transitions))
-		};
-	}
-	return nested;
+	return complex[definitions = newDefinitions];
 }
 
 private StateMachine unnestForks(StateMachine nestedActions) {
