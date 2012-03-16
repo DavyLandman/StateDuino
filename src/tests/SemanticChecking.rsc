@@ -169,7 +169,6 @@ public test bool testNestedDefineWorks() {
 private void iterateOverAllSDOFiles(void (loc f) perFile) {
 	csfFiles = crawl(|project://stateduino/examples/|);
 	for (/file(l) <- csfFiles, l.extension == "sdo") {
-		println("Checking <l>");
 		perFile(l);
 	}
 }

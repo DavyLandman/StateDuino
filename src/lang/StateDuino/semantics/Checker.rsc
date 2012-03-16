@@ -52,6 +52,7 @@ public set[Message] fullCheck(StateMachine sm) {
 	result += checkForInvalidActionSequences(sm);
 	result += checkForInvalidStart(sm);
 	result += checkForInvalidEnd(sm);
+	result += checkForAlreadyDefinedNames(sm);
 	return result;	
 }
 
@@ -150,6 +151,20 @@ private StateMachine unNest(StateMachine sm) {
 	return fullUnnested;
 }
 
+
+private set[Message] checkForAlreadyDefinedNames(StateMachine sm) {
+	set[str] definedStarts = {};
+	rel[str, loc] alreadyDefined = {};
+	visit(sm.definitions) {
+		case n:name(str nm) : if (nm in definedStarts) {
+			alreadyDefined += {<nm, n@location>};
+		} 
+		else {
+			 definedStarts += {nm};
+		}
+	}
+	return {*{error("<fixName(md)> is already defined", l) | l <- alreadyDefined[md]} | md <- domain(alreadyDefined)};
+}
 
 private set[Message] checkForInvalidEnd(StateMachine sm) {
 	set[Message] result = {};
