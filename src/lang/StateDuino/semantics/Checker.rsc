@@ -50,19 +50,11 @@ public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);
 	sm = unNest(sm);
 	result += checkForInvalidActionSequences(sm);
-	result += checkForInvalidStart(sm);
 	result += checkForInvalidEnd(sm);
 	result += checkForAlreadyDefinedNames(sm);
 	return result;	
 }
 
-private set[Message] checkForInvalidStart(StateMachine sm) {
-	Name target = sm.startFork;
-	if (fork(_, target, _, _) <- sm.definitions) {
-		return {};
-	}
-	return {error("<target.name> is undefined", sm.startFork@location)};
-}
 
 private set[Message] checkForInvalidActionSequences(StateMachine sm) {
 	set[str] definedForks = {nm | /fork(_,name(str nm), _, _) := sm};
@@ -168,7 +160,7 @@ private set[Message] checkForAlreadyDefinedNames(StateMachine sm) {
 
 private set[Message] checkForInvalidEnd(StateMachine sm) {
 	set[str] definedStarts = {};
-	rel[str end, loc req] endRequirements = {};
+	rel[str end, loc req] endRequirements = {<sm.startFork.name, sm.startFork@location>};
 	visit(sm.definitions) {
 		case [_*,a:action(nm)] : endRequirements += {<nm, a@location>};	
 		case name(str nm) : definedStarts += {nm};
