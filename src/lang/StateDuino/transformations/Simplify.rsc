@@ -12,7 +12,6 @@ public StateMachine simplify(StateMachine complex) {
 	result = removeUnnamedForks(result);
 	result = inlineChains(result);
 	result = unnestForks(result);
-	//result = removeMainActions(result);
 	return result;
 }
 private StateMachine removeUnnamedForks(StateMachine sm) {
@@ -100,19 +99,4 @@ private StateMachine unnestForks(StateMachine sm) {
 		namesSeen += newNames;	
 	}
 	return sm[definitions = rewroteDefinitions + newDefinitions];
-}
-private StateMachine removeMainActions(StateMachine simplified) {
-	str startState = (simplified.startState.action?) ? simplified.startState.action : simplified.startState.fork.name;
-	list[StateTransitions] newTransitions = [];
-	for (c:chain([first,_*]) <- simplified.transitions)  {
-		if (action(name) := first) {
-			if (name == startState) {
-				newTransitions += [c];	
-			}
-		}
-		else {
-			newTransitions += [c];	
-		}
-	};
-	return simplified[transitions = newTransitions];
 }
