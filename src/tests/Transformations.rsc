@@ -14,7 +14,7 @@ public test bool checkGlobalActionsAreNested() {
 		return true;
 	}
 	else {
-		iprint(result);
+		iprintln(result);
 		return false;
 	}
 }
@@ -24,7 +24,7 @@ public test bool checkGlobalActionsAreNestedRespectingScope() {
 		return true;
 	}
 	else {
-		iprint(result);
+		iprintln(result);
 		return false;
 	}
 }
@@ -34,7 +34,7 @@ public test bool checkChainedChainsActionsAreNested() {
 		return true;
 	}
 	else {
-		iprint(result);
+		iprintln(result);
 		return false;
 	}
 }
@@ -55,7 +55,7 @@ public test bool checkGlobalActionsAreNested2() {
 		return true;
 	}
 	else {
-		iprint(result);
+		iprintln(result);
 		return false;
 	}
 }
@@ -66,14 +66,14 @@ public test bool checkStartActionIsNotRemovedButNested() {
 		return true;
 	}
 	else {
-		iprint(result);
+		iprintln(result);
 		return false;
 	}
 }
 public test bool checkNonStartIsRemoved() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 T1 =\> T2 T2 =\> T3? { yes =\> T1 }");
 	if (chain([action("T2"), _*]) <- result.transitions) {
-		iprint(result);
+		iprintln(result);
 		return false;
 	}
 	else {
@@ -83,7 +83,7 @@ public test bool checkNonStartIsRemoved() {
 public test bool checkNonStartIsRemoved2() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 T1 =\> T2 T2 =\> T3? T3? { yes =\> T1 }");
 	if (chain([action("T2"), _*]) <- result.transitions) {
-		iprint(result);
+		iprintln(result);
 		return false;
 	}
 	else {
@@ -96,7 +96,7 @@ public test bool checkForkIsUnnested() {
 		return true;
 	}
 	else {
-		iprint(result);
+		iprintln(result);
 		return false;
 	}
 }
@@ -109,7 +109,7 @@ public test bool testNestedForkDefinitionsAreAlsoMovedUp() {
 		return true;
 	}
 	else {
-		//iprint(result);
+		//iprintln(result);
 		return false;
 	}
 }
