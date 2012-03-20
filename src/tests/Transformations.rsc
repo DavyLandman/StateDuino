@@ -44,7 +44,37 @@ public test bool checkGlobalActionsAreNestedWithFork() {
 		return true;
 	}
 	else {
-		iprint(result);
+		iprintln(result);
+		return false;
+	}
+}
+public test bool checkForkUnnestingWorks() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> fork { c2? =\> A1; T1; } } ");
+	if (/fork(_, name("T1"), _, [path(_, [action(_)])])  := result) {
+		return true;
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
+}
+public test bool checkForkUnnestingWorks2() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> fork T1 { c2? =\> A1; T1; } } ");
+	if (fork(_, name(nm), _, [path(_, [action("A1"), action(nm)])]) <- result.definitions) {
+		return true;
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
+}
+public test bool checkForkUnnestingWorksWithRenewDefinitions() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> fork T1 { c2? =\> A1; fork T1 { c3? =\> A2; T1; } } } ");
+	if (fork(_, name(nm), _, [path(_, [action("A2"), action(nm)])]) <- result.definitions) {
+		return true;
+	}
+	else {
+		iprintln(result);
 		return false;
 	}
 }

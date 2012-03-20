@@ -11,7 +11,7 @@ public StateMachine simplify(StateMachine complex) {
 	StateMachine result = complex;
 	result = removeUnnamedForks(result);
 	result = inlineChains(result);
-	//result = unnestForks(result);
+	result = unnestForks(result);
 	//result = removeMainActions(result);
 	return result;
 }
@@ -63,43 +63,43 @@ private StateMachine inlineChains(StateMachine complex) {
 	return complex[definitions = newDefinitions];
 }
 
-private StateMachine unnestForks(StateMachine nestedActions) {
-	set[str] forksSeen = {forkName.name | chain([forkDescription(forkName, _)]) <- nestedActions.transitions};
-	
-	StateTransition processForkDefinition(f:forkDescription(forkName, acts)) {
-			str newForkName = forkName.name;
-			while (newForkName in forksSeen) {
-				// we have to rename this fork because a name collision exists
-				newForkName += "?";
-			}	
-			forksSeen += {newForkName};
-			if (forkName.name != newForkName) {
-				str oldName = forkName.name;
-				// now shadow the usage of this forkname
-				return visit(f[name = forkName[name = newForkName]]) {
-					case normalFork(oldName) => normalFork(newForkName)
-					case sleepableFork(oldName) => sleepableFork(newForkName)
-					case nonBlockingFork(oldName) => nonBlockingFork(newForkName)
-				};	
+// assumes no chains, no definition loops, no nameless forks
+private StateMachine unnestForks(StateMachine sm) {
+	map[str, str] namesSeen = (nm:nm | fork(_, name(nm), _, _) <- sm.definitions);
+	list[Definition] newDefinitions = [];
+	tuple[Definition, map[str, str]] renameAndUnnest(Definition f, map[str, str] alreadyRenamed) {
+		list[ConditionalPath] newPaths = [];
+		for (p <- f.paths) {
+			if (definition(fn:fork(_, name(nm), _, _)) := last(p.actions)) {
+				str newName = nm;
+				while (alreadyRenamed[newName]?) {
+					newName = "_" + newName;
+				}
+				if (newName != nm) {
+					<fn, newNames> = renameAndUnnest(fn, alreadyRenamed + (nm : newName));		
+					alreadyRenamed += newNames;
+				}
+				alreadyRenamed[newName] = newName;
+				newDefinitions += [fn[name = fn.name[name = newName]]];
+				newPaths += [p[actions = prefix(p.actions) + [action(newName)[@location = f@location]]]];
+			} 
+			else {
+				if (alreadyRenamed[last(p.actions).name]?) {
+					Action newLast = last(p.actions)[name = alreadyRenamed[last(p.actions).name]];
+					p = p[actions = prefix(p.actions) + [newLast]];
+				}
+				newPaths += [p];	
 			}
-			return f;
+		}
+		return <f[paths = newPaths], alreadyRenamed>;
 	}
-	
-	set[StateTransitions] newGlobalTransitions = {};
-	renamedForks = visit(nestedActions) {
-		case c:chain([notfork, _*, f:forkDescription(forkName, _)]) : {
-			StateTransition newGlobal =processForkDefinition(f);
-			newGlobalTransitions += {chain([newGlobal])};
-			insert c[transitions = prefix(c.transitions) + [fork(newGlobal.name)]];
-		}
-		case a:action(_, c:chain([ _*, f:forkDescription(forkName, _)])) : {
-			StateTransition newGlobal =processForkDefinition(f);
-			newGlobalTransitions += {chain([newGlobal])};
-			insert a[transitions = c[transitions = prefix(c.transitions) + [fork(newGlobal.name)]]];
-		}
-	};
-	// now append the unnested forks
-	return renamedForks[transitions = renamedForks.transitions + toList(newGlobalTransitions)];
+	list[Definition] rewroteDefinitions = [];
+	for (f <- sm.definitions) {
+		<f, newNames> = renameAndUnnest(f, namesSeen);		
+		rewroteDefinitions += [f];
+		namesSeen += newNames;	
+	}
+	return sm[definitions = rewroteDefinitions + newDefinitions];
 }
 private StateMachine removeMainActions(StateMachine simplified) {
 	str startState = (simplified.startState.action?) ? simplified.startState.action : simplified.startState.fork.name;
