@@ -27,8 +27,16 @@ private StateMachine removeUnnamedForks(StateMachine sm) {
 }
 
 private StateMachine inlineChains(StateMachine complex) {
-// not correct for a chain referencing another chain!
 	map[str, list[Action]] chainActions = ( m : p | chain(name(m), p) <- complex.definitions);
+	solve(chainActions) {
+		for (cn <- chainActions) {
+			list[Action] acs = chainActions[cn];
+			if (chainActions[last(acs).name]?) {
+				// nested chain call;
+				chainActions[cn] = prefix(acs) + chainActions[last(acs).name];
+			}
+		}
+	}
 	Definition replaceActions(Definition def, set[str] nestedForkNames) {
 		list[ConditionalPath] newPaths = [];
 		for (p <- def.paths) {
