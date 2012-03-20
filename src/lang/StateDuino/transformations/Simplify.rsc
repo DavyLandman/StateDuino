@@ -10,7 +10,7 @@ import lang::StateDuino::ast::Main;
 public StateMachine simplify(StateMachine complex) {
 	StateMachine result = complex;
 	result = removeUnnamedForks(result);
-	result = nestChains(result);
+	result = inlineChains(result);
 	//result = unnestForks(result);
 	//result = removeMainActions(result);
 	return result;
@@ -26,7 +26,7 @@ private StateMachine removeUnnamedForks(StateMachine sm) {
 	};
 }
 
-private StateMachine nestChains(StateMachine complex) {
+private StateMachine inlineChains(StateMachine complex) {
 	map[str, list[Action]] chainActions = ( m : p | chain(name(m), p) <- complex.definitions);
 	Definition replaceActions(Definition def, set[str] nestedForkNames) {
 		list[ConditionalPath] newPaths = [];
