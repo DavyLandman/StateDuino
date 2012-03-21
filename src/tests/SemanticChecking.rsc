@@ -28,8 +28,8 @@ private bool verifyContainsErrorMessage(str input, str message) {
 	if (error(message, _) <- messages) {
 		return true;
 	}
-	iprintln(input);
-	iprintln(messages);
+	//iprintln(input);
+	//iprintln(messages);
 	return false;
 }
 private bool verifyNotContainsErrorMessage(str input, str message) {
@@ -47,8 +47,8 @@ private bool verifyContainsNoErrorMessages(str input) {
 	if (size(result) == 0) {
 		return true;
 	}
-	iprintln(input);
-	iprintln(result);
+	//iprintln(input);
+	//iprintln(result);
 	return false;
 }
 
