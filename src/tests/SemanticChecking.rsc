@@ -9,10 +9,10 @@ import IO;
 import FileSystem;
 
 private set[Message] runFastCheckOn(str input) {
-	return fastCheck(getStateMachine(input));
+	return performFastCheck(getStateMachine(input));
 }
 private set[Message] runBigCheckOn(str input) {
-	return fullCheck(getStateMachine(input));
+	return performFullCheck(getStateMachine(input));
 }
 private bool checkContainsErrorMessage(str input, str message) {
 	set[Message] messages = runFastCheckOn(input);
@@ -28,8 +28,8 @@ private bool verifyContainsErrorMessage(str input, str message) {
 	if (error(message, _) <- messages) {
 		return true;
 	}
-	//iprintln(input);
-	//iprintln(messages);
+	iprintln(input);
+	iprintln(messages);
 	return false;
 }
 private bool verifyNotContainsErrorMessage(str input, str message) {
@@ -47,8 +47,8 @@ private bool verifyContainsNoErrorMessages(str input) {
 	if (size(result) == 0) {
 		return true;
 	}
-	//iprintln(input);
-	//iprintln(result);
+	iprintln(input);
+	iprintln(result);
 	return false;
 }
 
@@ -183,7 +183,7 @@ private void iterateOverAllSDOFiles(void (loc f) perFile) {
 public test bool verifyFullCheckWorks() {
 	set[Message] messages = {};
 	iterateOverAllSDOFiles(void (loc f) {
-		messages += fullCheck(getStateMachine(f));
+		messages += performFullCheck(getStateMachine(f));
 	});
 	if (size(messages) == 0) {
 		return true;	

@@ -21,7 +21,7 @@ public void registerStateDuinoIDE() {
 		getSolarizedLightCategories(),
 		categories(("NonBlocking" : {italic()})),
 		annotator(Tree (Tree cst) {
-			set[Message] messages = fastCheck(getStateMachine(cst));
+			set[Message] messages = performFastCheck(getStateMachine(cst));
 			if (size(messages) > 0) {
 				return cst[@messages = messages];
 			}
@@ -29,7 +29,7 @@ public void registerStateDuinoIDE() {
 		}),
 		builder(set[Message] (Tree cst) {
 			StateMachine ast = getStateMachine(cst);
-			set[Message] messages = fullCheck(ast);
+			set[Message] messages = performFullCheck(ast);
 			return messages;
 		})
 	});

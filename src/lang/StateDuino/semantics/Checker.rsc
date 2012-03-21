@@ -9,174 +9,38 @@ import Graph;
 import IO;
 import lang::StateDuino::ast::Main;
 import lang::StateDuino::semantics::Concepts;
+import lang::StateDuino::transformations::Simplify;
 
-public set[Message] fastCheck(StateMachine sm) {
-	set[Message] result ={};
-	visit(sm) {
-		case p:param(str name, _) : 
-			if (! (name in validParameterTypes)) {
-				result += {error("Type <name> is not supported",p@location)};
-			}
-		case [_*, definition(def), list[Action] followingDefinition]:
-			if (c:chain(_,_) := def) {
-				result += {error("You cannot nest a chain (<c.name.name>).", c.name@location)};
-			} 
-			else if (size(followingDefinition) > 0) {
-				result += {error("There should be no more actions after a call to a fork (<def.name? ? def.name.name : "nameless">).", def.name? ? def.name@location : def@location)};
-			}
-		case f:fork(_, _, _, []) : result += {emptyBodyMessage(f)};
-		case f:namelessFork(_, _, []) : result += {emptyBodyMessage(f)};
-		case c:chain(_, []) : result += {emptyBodyMessage(c)};
-		case p:path(_, []) : result += {emptyBodyMessage(p)};
-		case p:defaultPath(_, []) : result += {emptyBodyMessage(p)};
-	};
-	return result;
-}
-private Message emptyBodyMessage(Definition def) {
-	if (chain(_,_) := def) {
-		return emptyBodyMessage(def.name.name, "action", def.name@location);
-	}
-	else if (namelessFork(_,_,_) := def) {
-		return emptyBodyMessage("nameless", "condition", def@location);
-	}
-	return emptyBodyMessage(def.name.name, "condition", def.name@location);
-}
-private Message emptyBodyMessage(ConditionalPath pth) 
-	= emptyBodyMessage("condition", "action", pth@location);
-	
-private Message emptyBodyMessage(str name, str missing, loc l) = error("You must define at least one <missing> for <name>.", l);
+//public set[Message] structuralCheck
 
-public set[Message] fullCheck(StateMachine sm) {
-	set[Message] result = fastCheck(sm);
-	sm = unNest(sm);
-	result += checkForInvalidActionSequences(sm);
-	result += checkForInvalidEnd(sm);
-	result += checkForAlreadyDefinedNames(sm);
-	return result;	
-}
+extend lang::StateDuino::semantics::FastChecking;
+extend lang::StateDuino::semantics::StructureChecking;
+extend lang::StateDuino::semantics::FullChecking;
 
+public set[Message] performFastCheck(StateMachine sm) = fastCheck(sm);
 
-private set[Message] checkForInvalidActionSequences(StateMachine sm) {
-	set[str] definedForks = {nm | fork(_,name(str nm), _, _) <- sm.definitions};
-	set[Message] result ={};
-	visit(sm) {
-		case [list[Action] prefixChain, _]:
-			for (a:action(nm) <- prefixChain, nm in definedForks) {
-				result += {error("There should be no more actions after a call to a fork (<fixName(nm)>).", a@location)};
-			}
-	}
-	return result;
-}
-
-private StateMachine unNest(StateMachine sm) {
-	set[str] usedNames = {nm | fork(_,name(str nm), _, _) <- sm.definitions};
-	usedNames += {nm | chain(name(str nm), _) <- sm.definitions};
-	list[Definition] newDefinitions = [];
-	StateMachine fullUnnested = sm;
-	solve(fullUnnested) {
-		fullUnnested = visit (fullUnnested) {
-			case d:definition(f: fork(_,n:name(str nm), _, paths)) : {
-				if (nm in usedNames) {
-					while (nm in usedNames) {
-						nm += "!";
-					}
-					newName = n[name = nm];
-					usedNames += {nm};
-					f = f[paths = visit (paths) {
-						case action(n) => action(newName)
-					}];
-					f = f[name = newName];
-				}
-				newDefinitions += [f];
-				insert action(f.name.name)[@location=d@location];
-			}
-			case d:definition(f:namelessFork(types, preActions, paths)) : {
-				str nm = "nameless";	
-				while (nm in usedNames) {
-					nm += "!";
-				}
-				usedNames += {nm};
-				newName = name(nm)[@location = f@location];
-				newDefinitions += [fork(types, newName, preActions, paths)];
-				insert action(newName.name)[@location=d@location];
-			}
-			case d:definition(c:chain(n:name(str nm), _)) : {
-				if (nm in usedNames) {
-					while (nm in usedNames) {
-						nm += "!";
-					}
-					newName = n[name = nm];
-					usedNames += {nm};
-					c = c[name = newName];
-				}
-				newDefinitions += [c];
-				insert action(c.name.name)[@location=d@location];
-			}
-			case f:fork(opts, n:name(str nm), pre, paths): {
-				newF = f[paths = visit(paths) {
-						case a:action("self") => a[name = nm] 
-				}];	
-				if (newF == f) {
-					// we can now remove the preActions
-					if (size(pre) > 0) {
-						while (nm in usedNames) {
-							nm += "!";
-						}
-						newName = n[name = nm];
-						usedNames += {nm};
-						newFork = f[paths = [defaultPath(pre + [last(pre)[name=nm]])]];
-						newFork = newFork[preActions = []];
-						f = f[forkType = opts + [immediate()]];
-						f = f[name = newName];
-						newDefinitions += [ newFork];
-						insert f[preActions = []];
-					}
-				}
-				else {
-					insert newF;	
-				}
-			}
-		};
-		fullUnnested = fullUnnested[definitions = fullUnnested.definitions + newDefinitions];
-		newDefinitions = [];
-	}
-	return fullUnnested;
-}
-
-
-private set[Message] checkForAlreadyDefinedNames(StateMachine sm) {
-	set[str] definedStarts = {};
-	rel[str, loc] alreadyDefined = {};
-	visit(sm.definitions) {
-		case n:name(str nm) : if (nm in definedStarts) {
-			alreadyDefined += {<nm, n@location>};
-		} 
-		else {
-			 definedStarts += {nm};
-		}
-	}
-	return {*{error("<fixName(md)> is already defined", l) | l <- alreadyDefined[md]} | md <- domain(alreadyDefined)};
-}
-
-private set[Message] checkForInvalidEnd(StateMachine sm) {
-	set[str] definedStarts = {};
-	rel[str end, loc req] endRequirements = {<sm.startFork.name, sm.startFork@location>};
-	visit(sm.definitions) {
-		case [_*,a:action(nm)] : endRequirements += {<nm, a@location>};	
-		case name(str nm) : definedStarts += {nm};
-	}
-	set[str] missingDefines = domain(endRequirements) - definedStarts;
-	return {*{error("<fixName(md)> is undefined", l) | l <- endRequirements[md]} | md <- missingDefines};
-}
-
-private str fixName(str nm)  { 
-	if (/<pre:[^!]+>[!]+/ := nm) { 
-		return pre; 
+public set[Message] performStructuralCheck(StateMachine sm) {
+	set[Message] result = performFastCheck(sm);
+	if (result == {}) {
+		return structureCheck(sm);	
 	}
 	else {
-		return nm;
+		return result;
 	}
-} 
+}
+
+public set[Message] performFullCheck(StateMachine sm) {
+	set[Message] result = performStructuralCheck(sm);
+	if (result == {}) {
+		sm = simplify(sm);
+		return fullCheck(sm);
+	}
+	else {
+		return result;	
+	}
+}
+
+
 /*
 public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = fastCheck(sm);
