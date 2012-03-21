@@ -36,27 +36,33 @@ private StateMachine inlineChains(StateMachine complex) {
 			}
 		}
 	}
+	
+	list[Action] replaceActions(list[Action] acts, set[str] nestedForkNames) {
+		list[Action] result = [];
+		for (a <- acts) {
+			switch(a) {
+				case action(nm): 
+					if (!(nm in nestedForkNames) && chainActions[nm]?) {
+						result += chainActions[nm];	
+					}	
+					else {
+						result += [a];	
+					}
+				case d:definition(f) : {
+					result += [d[definition = replaceActions(f, nestedForkNames + (f.name? ? {f.name.name} : {}))]];	
+				}
+			}
+		}
+		return result;
+	};
+	
 	Definition replaceActions(Definition def, set[str] nestedForkNames) {
 		list[ConditionalPath] newPaths = [];
 		for (p <- def.paths) {
-			list[Action] newActions= [];
-			for (a <- p.actions) {
-				switch(a) {
-					case action(nm): 
-						if (!(nm in nestedForkNames) && chainActions[nm]?) {
-							newActions += chainActions[nm];	
-						}	
-						else {
-							newActions += [a];	
-						}
-					case d:definition(f) : {
-						newActions += [d[definition = replaceActions(f, nestedForkNames + (f.name? ? {f.name.name} : {}))]];	
-					}
-				}
-			}
-			newPaths += [p[actions = newActions]];
+			newPaths += [p[actions = replaceActions(p.actions, nestedForkNames)]];
 		}
-		return def[paths= newPaths];
+		newPreActions = replaceActions(def.preActions, nestedForkNames);
+		return def[paths= newPaths][preActions = newPreActions];
 	};	
 	list[Definition] newDefinitions = [replaceActions(f, {}) | f:fork(_,_,_,_) <- complex.definitions];
 	return complex[definitions = newDefinitions];

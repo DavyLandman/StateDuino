@@ -38,6 +38,16 @@ public test bool checkChainedChainsActionsAreNested() {
 		return false;
 	}
 }
+public test bool checkChainsAreNestedInPreActions() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 {A1; c1? =\> T1; } chain A1 { A2; A3; }");
+	if (/fork(_, name("T1"), [action("A2"), action("A3")], _)  := result) {
+		return true;
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
+}
 public test bool checkGlobalActionsAreNestedWithFork() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> A1; } chain A1 { A2; fork T2 { c1? =\> T1; } }");
 	if (/fork(_, name("T1"), _, [path(_, [action("A2"), action("T2")])])  := result) {
