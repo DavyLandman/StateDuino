@@ -30,6 +30,9 @@ private set[Message] fastCheck(StateMachine sm) {
 		case p:path(_, []) : result += {emptyBodyMessage(p)};
 		case p:defaultPath(_, []) : result += {emptyBodyMessage(p)};
 	};
+	for (f:namelessFork(_,_,_) <- sm.definitions) {
+		result += {error("A nameless toplevel fork can never be called.", f@location)};	
+	}
 	return result;
 }
 private Message emptyBodyMessage(Definition def) {
