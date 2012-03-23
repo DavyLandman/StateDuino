@@ -36,15 +36,25 @@ private str getName(definition(d)) = "_fork";
 
 private set[Message] checkForDefineLoops(StateMachine sm) {
 	set[Message] result = {};
-	set[str] mainForkEnds = {nm | fork(_, name(nm), _, _) <- sm.definitions} +  {"_fork"};
-	rel[str, str] mainPath = {<st.name, getName(ed)> | chain(st, [_*, ed]) <- sm.definitions}+;
+	rel[str, str] chainPaths = { *{<st.name, ac> | /action(str ac) <- acs} | chain(st, list[Action] acs) <- sm.definitions};
+	chainPaths = chainPaths+;
 	
-	for (c:chain(st, [_*, action(ed)]) <- sm.definitions) {
-		if (!(mainPath[ed] in mainForkEnds) && !(ed in mainForkEnds)) {
-			// ah we found a loop	
-			result += {error("<st.name> does not end in a fork.", st@location)};
-		}
-	}	
+	set[str] invalidChains = {};
+	solve(invalidChains) {
+		for (c:chain(n:name(str st),_ ) <- sm.definitions) {
+			if (<st, st> in chainPaths) {
+				invalidChains += {st};
+				result += error("<st> has a definition loop.", n@location);
+			}
+			else if ((chainPaths[st] & invalidChains) > {}) {
+				invalidChains += {st};
+				result += error("<st> calls a chain which has a definition loop.", n@location);
+			}
+		}	
+	}
 	return result;
-	
+}
+
+private set[Message] immediateActionsNeverFork(StateMachine sm) {
+
 }
