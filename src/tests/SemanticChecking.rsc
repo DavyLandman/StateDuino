@@ -111,7 +111,9 @@ public test bool testInvalidPreChainWithForkReference() {
 private bool verifyDoesntEndInFork(str inp, str wrongEnd) {
 	return verifyContainsErrorMessage(inp,
 		"<wrongEnd> does not end in a fork."
-		);
+		) || verifyContainsErrorMessage(inp,
+		"<wrongEnd> has a definition loop."
+		) ;
 }
 
 public test bool testEveryThingEndsWithAFork() {
