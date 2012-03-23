@@ -20,7 +20,7 @@ chain DrawScreen {
 }
 
 chain WriteTemperature {
-	WriteTemperature;
+	WriteTemperatureToScreen;
 	immediate fork {
 		IsUpdatingTemperature?	=>
 			WriteNewScheduleAndTemperature;
