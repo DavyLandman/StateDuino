@@ -3,7 +3,7 @@ module lang::StateDuino::semantics::Checker
 import Map;
 import List;
 import Set;
-import Message;
+extend Message;
 import Relation;
 import Graph;
 import IO;
