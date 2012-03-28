@@ -34,12 +34,12 @@ private void writeStateMachine(loc directory, StateMachine sm) {
 	loc cFile = directory[file="<sm.name.name>.cpp"];
 	loc hSMFile = directory[file="_SM<sm.name.name>.h"];
 	loc cSMFile = directory[file="_SM<sm.name.name>.cpp"];
+	writeStateMachineHeader(hSMFile, sm);
+	writeStateMachineImplementation(cSMFile, sm);
 	writeCallbackHeader(hFile, sm);
 	if (!exists(cFile)) {
 		writeDefaultCallback(cFile, sm);	
 	}
-	writeStateMachineHeader(hSMFile, sm);
-	//writeStateMachineImplementation(cSMFile, sm);
 }
 
 private str getParam(param(str t, str n)) = "<t> <n>";
@@ -109,8 +109,59 @@ private void writeStateMachineHeader(loc f, StateMachine sm) {
 	'#include \<stdint.h\>
 	'	
 	'void* <sm.name.name>_initialize(SharedState state, <params>);
-	'void* <sm.name.name>_takeStep(<params>);
+	'void* <sm.name.name>_takeStep(void* sm, <params>);
 	'uint8_t <sm.name.name>_isSleepableStep(void* sm);
+	'
+	'#ENDIF
+	");
+}
+private str getParamInvoke(param(str t, str n)) = "<n>";
+
+private str getParamsInvoke(parameterized(_, [Parameter first, list[Parameter] rest])) {
+	 return (getParamInvoke(first) | it + ", " + getParam(m) | m <- rest);
+}
+
+private default str getParamsInvoke(StateMachineIdentifier smi) = "";
+
+private str getParamTypes(param(str t, str n)) = "<t>";
+
+private str getParamsTypes(parameterized(_, [Parameter first, list[Parameter] rest])) {
+	 return (getParamTypes(first) | it + ", " + getParam(m) | m <- rest);
+}
+
+private default str getParamsInvoke(StateMachineIdentifier smi) = "";
+
+private str getForknameInvoke(action(str nm)) = "_<nm>";
+private str getForknameInvoke(name(str nm)) = "_<nm>";
+
+
+private void writeStateMachineImplementation(loc f, StateMachine sm) {
+	str params = getParams(sm.name);
+	str paramsInvoke = getParamsInvoke(sm.name);
+	writeFile(f, "#include \"_SM<sm.name.name>.h\"
+	'/***************************************
+	'** This file is generated, do not edit! 
+	'** You can edit SharedState.h or <sm.name.name>.cpp
+	'****************************************/
+	'#include \"<sm.name.name>.h\"
+	'	
+	'void* <sm.name.name>_initialize(SharedState state, <params>) {
+	'	initialize(state, <paramsInvoke>);
+	'	return reinterpret_cast\<void*\>(<getForkNameInvoke(sm.startFork)>); 
+	'}
+	'
+	'void* <sm.name.name>_takeStep(void* sm, <params>) {
+	'	return reinterpret_cast\<void* (*)(<getParamsTypes(sm.name)>)\>(sm)(<paramsInvoke>);	
+	'}
+	'
+	'uint8_t <sm.name.name>_isSleepableStep(void* sm) {
+	'	<for(fork([_*, sleepable(), _*], nm, _, _) <- sm.definitions) {>
+	'	if (sm == reinterpret_cast\<void*\>(<getForkNameInvoke(nm)>)) {
+	'		return 1;
+	'	} 
+	'	<}>
+	'	return 0;
+	'}
 	'
 	'#ENDIF
 	");
