@@ -54,6 +54,7 @@ private str getConditionName(str con) = replaceAll(con, "?","");
 
 private void writeCallbackHeader(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
+	str paramsNotFirst = params == "" ? "" : ", " + params;
 	writeFile(f, "#IFNDEF <toUpperCase(sm.name.name)>_H
 	'#DEFINE <toUpperCase(sm.name.name)>_H
 	'/***************************************
@@ -63,7 +64,7 @@ private void writeCallbackHeader(loc f, StateMachine sm) {
 	'#include \"SharedState.h\"
 	'#include \<stdint.h\>
 	'	
-	'void initialize(SharedState state, <params>);
+	'void initialize(SharedState state <paramsNotFirst>);
 	'
 	'<for(action(ac) <- sort([ *{ *as | /[list[Action] as, _] <- sm}])) {>
 		'void <ac>(<params>);
@@ -78,9 +79,10 @@ private void writeCallbackHeader(loc f, StateMachine sm) {
 
 private void writeDefaultCallback(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
+	str paramsNotFirst = params == "" ? "" : ", " + params;
 	writeFile(f, "#include \"<sm.name.name>.h\"
 	'	
-	'void initialize(SharedState state, <params>) {
+	'void initialize(SharedState state <paramsNotFirst>) {
 	'
 	'}
 	'
@@ -99,6 +101,7 @@ private void writeDefaultCallback(loc f, StateMachine sm) {
 
 private void writeStateMachineHeader(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
+	str paramsNotFirst = params == "" ? "" : ", " + params;
 	writeFile(f, "#IFNDEF _SM<toUpperCase(sm.name.name)>_H
 	'#DEFINE _SM<toUpperCase(sm.name.name)>_H
 	'/***************************************
@@ -108,8 +111,8 @@ private void writeStateMachineHeader(loc f, StateMachine sm) {
 	'#include \"SharedState.h\"
 	'#include \<stdint.h\>
 	'	
-	'void* <sm.name.name>_initialize(SharedState state, <params>);
-	'void* <sm.name.name>_takeStep(void* sm, <params>);
+	'void* <sm.name.name>_initialize(SharedState state <paramsNotFirst>);
+	'void* <sm.name.name>_takeStep(void* sm <paramsNotFirst>);
 	'uint8_t <sm.name.name>_isSleepableStep(void* sm);
 	'
 	'#ENDIF
@@ -129,15 +132,17 @@ private str getParamsTypes(parameterized(_, [Parameter first, list[Parameter] re
 	 return (getParamTypes(first) | it + ", " + getParam(m) | m <- rest);
 }
 
-private default str getParamsInvoke(StateMachineIdentifier smi) = "";
+private default str getParamsTypes(StateMachineIdentifier smi) = "";
 
-private str getForknameInvoke(action(str nm)) = "_<nm>";
-private str getForknameInvoke(name(str nm)) = "_<nm>";
+private str getForkNameInvoke(action(str nm)) = "_<nm>";
+private str getForkNameInvoke(name(str nm)) = "_<nm>";
 
 
 private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
+	str paramsNotFirst = params == "" ? "" : ", " + params;
 	str paramsInvoke = getParamsInvoke(sm.name);
+	str paramsInvokeNotFirst = paramsInvoke == "" ? "" : ", " + paramsInvoke;
 	writeFile(f, "#include \"_SM<sm.name.name>.h\"
 	'/***************************************
 	'** This file is generated, do not edit! 
@@ -145,12 +150,12 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'****************************************/
 	'#include \"<sm.name.name>.h\"
 	'	
-	'void* <sm.name.name>_initialize(SharedState state, <params>) {
-	'	initialize(state, <paramsInvoke>);
+	'void* <sm.name.name>_initialize(SharedState state <paramsNotFirst>) {
+	'	initialize(state, <paramsInvokeNotFirst>);
 	'	return reinterpret_cast\<void*\>(<getForkNameInvoke(sm.startFork)>); 
 	'}
 	'
-	'void* <sm.name.name>_takeStep(void* sm, <params>) {
+	'void* <sm.name.name>_takeStep(void* sm <paramsNotFirst>) {
 	'	return reinterpret_cast\<void* (*)(<getParamsTypes(sm.name)>)\>(sm)(<paramsInvoke>);	
 	'}
 	'
@@ -162,7 +167,5 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'	<}>
 	'	return 0;
 	'}
-	'
-	'#ENDIF
 	");
 }
