@@ -58,6 +58,15 @@ private void writeCallbackHeader(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
 	writeFile(f, "#IFNDEF <toUpperCase(sm.name.name)>_H
 	'#DEFINE <toUpperCase(sm.name.name)>_H
+	'/***************************************
+	'** This file is generated, do not edit! 
+	'** You can edit SharedState.h or <sm.name.name>.cpp
+	'****************************************/
+	'#include \"SharedState.h\"
+	'#include \<stdint.h\>
+	'	
+	'void initialize(SharedState state, <params>);
+	'
 	'<for(action(ac) <- sort([ *{ *as | /[list[Action] as, _] <- sm}])) {>
 		'void <ac>(<params>);
 	'<}>
