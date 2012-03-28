@@ -35,10 +35,11 @@ private void writeStateMachine(loc directory, StateMachine sm) {
 	loc hSMFile = directory[file="_SM<sm.name.name>.h"];
 	loc cSMFile = directory[file="_SM<sm.name.name>.cpp"];
 	writeCallbackHeader(hFile, sm);
-	/*
+	
 	if (!exists(cFile)) {
 		writeDefaultCallback(cFile, sm);	
 	}
+	/*
 	writeStateMachineHeadere(hSMFile, sm);
 	writeStateMachineImplementation(cSMFile, sm);
 	*/
@@ -74,5 +75,27 @@ private void writeCallbackHeader(loc f, StateMachine sm) {
 		'uint8_t _con_<getConditionName(cn)>(<params>);
 	'<}>
 	'#ENDIF
+	");
+}
+
+
+private void writeDefaultCallback(loc f, StateMachine sm) {
+	str params = getParams(sm.name);
+	writeFile(f, "#include \"<sm.name.name>.h\"
+	'	
+	'void initialize(SharedState state, <params>) {
+	'
+	'}
+	'
+	'<for(action(ac) <- sort([ *{ *as | /[list[Action] as, _] <- sm}])) {>
+		'void <ac>(<params>) {
+		'
+		'}
+	'<}>
+	'<for(cn <- sort([ *{ con | /single(str con) <- sm}])) { >
+		'uint8_t _con_<getConditionName(cn)>(<params>) {
+		'\treturn 1;
+		'}
+	'<}>
 	");
 }
