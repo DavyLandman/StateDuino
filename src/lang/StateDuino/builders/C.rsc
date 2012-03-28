@@ -35,14 +35,11 @@ private void writeStateMachine(loc directory, StateMachine sm) {
 	loc hSMFile = directory[file="_SM<sm.name.name>.h"];
 	loc cSMFile = directory[file="_SM<sm.name.name>.cpp"];
 	writeCallbackHeader(hFile, sm);
-	
 	if (!exists(cFile)) {
 		writeDefaultCallback(cFile, sm);	
 	}
-	/*
-	writeStateMachineHeadere(hSMFile, sm);
-	writeStateMachineImplementation(cSMFile, sm);
-	*/
+	writeStateMachineHeader(hSMFile, sm);
+	//writeStateMachineImplementation(cSMFile, sm);
 }
 
 private str getParam(param(str t, str n)) = "<t> <n>";
@@ -97,5 +94,24 @@ private void writeDefaultCallback(loc f, StateMachine sm) {
 		'\treturn 1;
 		'}
 	'<}>
+	");
+}
+
+private void writeStateMachineHeader(loc f, StateMachine sm) {
+	str params = getParams(sm.name);
+	writeFile(f, "#IFNDEF _SM<toUpperCase(sm.name.name)>_H
+	'#DEFINE _SM<toUpperCase(sm.name.name)>_H
+	'/***************************************
+	'** This file is generated, do not edit! 
+	'** You can edit SharedState.h or <sm.name.name>.cpp
+	'****************************************/
+	'#include \"SharedState.h\"
+	'#include \<stdint.h\>
+	'	
+	'void* <sm.name.name>_initialize(SharedState state, <params>);
+	'void* <sm.name.name>_takeStep(<params>);
+	'uint8_t <sm.name.name>_isSleepableStep(void* sm);
+	'
+	'#ENDIF
 	");
 }
