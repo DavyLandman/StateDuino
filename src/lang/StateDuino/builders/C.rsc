@@ -22,7 +22,7 @@ public void writeStateMachine(loc directory, loc coordinator) {
 private void checkForErrors(set[StateMachine] machines) {
 	set[Message] errors = {};
 	for (sm <- machines) {
-		errors += performFullCheck(sm);
+		errors += performStructuralCheck(sm);
 	}
 	if (errors != {}) {
 		throw "One or more errors in the state machines: <errors>";
@@ -47,21 +47,22 @@ private void writeStateMachine(loc directory, StateMachine sm) {
 private str getParam(param(str t, str n)) = "<t> <n>";
 
 private str getParams(parameterized(_, [Parameter first, list[Parameter] rest])) {
-	 params = (getParam(first.name) | it + ", " + getParam(m.name) | m <- rest);
-	
+	 return (getParam(first) | it + ", " + getParam(m) | m <- rest);
 }
 
 private default str getParams(StateMachineIdentifier smi) = "";
 
+private str getConditionName(str con) = replaceAll(con, "?","");
+
 private void writeCallbackHeader(loc f, StateMachine sm) {
-	str params = getParams(sm);
+	str params = getParams(sm.name);
 	writeFile(f, "#IFNDEF <toUpperCase(sm.name.name)>_H
 	'#DEFINE <toUpperCase(sm.name.name)>_H
-	'<for(ac <- sort([ *{ a.name | /list[Action] a <- sm, size(a) > 1}])) {>
+	'<for(action(ac) <- sort([ *{ *as | /[list[Action] as, _] <- sm}])) {>
 		'void <ac>(<params>);
 	'<}>
 	'<for(cn <- sort([ *{ con | /single(str con) <- sm}])) { >
-		'uint8_t c_<cn>(<params>);
+		'uint8_t _con_<getConditionName(cn)>(<params>);
 	'<}>
 	'#ENDIF
 	");
