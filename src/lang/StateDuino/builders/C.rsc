@@ -52,10 +52,21 @@ private default str getParams(StateMachineIdentifier smi) = "";
 
 private str getConditionName(str con) = replaceAll(con, "?","");
 
+private str cleanup(str inp) {
+	str result = inp;
+	solve(result) {
+		result = visit(result) {
+			case /<b:[^}]>[\n\r]+[ \t]*<a:[\n\r]+>/ => b+a
+		};
+	}
+	return result;
+}
+
+
 private void writeCallbackHeader(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
 	str paramsNotFirst = params == "" ? "" : ", " + params;
-	writeFile(f, "#IFNDEF <toUpperCase(sm.name.name)>_H
+	writeFile(f, cleanup("#IFNDEF <toUpperCase(sm.name.name)>_H
 	'#DEFINE <toUpperCase(sm.name.name)>_H
 	'/***************************************
 	'** This file is generated, do not edit! 
@@ -80,14 +91,14 @@ private void writeCallbackHeader(loc f, StateMachine sm) {
 	'}
 	'#endif
 	'#ENDIF
-	");
+	"));
 }
 
 
 private void writeDefaultCallback(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
 	str paramsNotFirst = params == "" ? "" : ", " + params;
-	writeFile(f, "#include \"<sm.name.name>.h\"
+	writeFile(f, cleanup("#include \"<sm.name.name>.h\"
 	'	
 	'void initialize(SharedState state <paramsNotFirst>) {
 	'
@@ -103,13 +114,13 @@ private void writeDefaultCallback(loc f, StateMachine sm) {
 		'\treturn 1;
 		'}
 	'<}>
-	");
+	"));
 }
 
 private void writeStateMachineHeader(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
 	str paramsNotFirst = params == "" ? "" : ", " + params;
-	writeFile(f, "#IFNDEF _SM<toUpperCase(sm.name.name)>_H
+	writeFile(f, cleanup("#IFNDEF _SM<toUpperCase(sm.name.name)>_H
 	'#DEFINE _SM<toUpperCase(sm.name.name)>_H
 	'/***************************************
 	'** This file is generated, do not edit! 
@@ -129,7 +140,7 @@ private void writeStateMachineHeader(loc f, StateMachine sm) {
 	'}
 	'#endif
 	'#ENDIF
-	");
+	"));
 }
 private str getParamInvoke(param(str t, str n)) = "<n>";
 
@@ -156,7 +167,7 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	str paramsNotFirst = params == "" ? "" : ", " + params;
 	str paramsInvoke = getParamsInvoke(sm.name);
 	str paramsInvokeNotFirst = paramsInvoke == "" ? "" : ", " + paramsInvoke;
-	writeFile(f, "#include \"_SM<sm.name.name>.h\"
+	writeFile(f, cleanup("#include \"_SM<sm.name.name>.h\"
 	'/***************************************
 	'** This file is generated, do not edit! 
 	'** You can edit SharedState.h or <sm.name.name>.cpp
@@ -192,7 +203,7 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'<for(frk <- sm.definitions) {>
 		'<generateForkBody(sm.definitions, frk,params, paramsInvoke)>
 	'<}>
-	");
+	"));
 }
 
 private str generateForkBody(list[Definition] defs, fork(fkind, fname, preActions, paths), str params, str paramsInvoke) {
@@ -225,13 +236,14 @@ private default str translateCondition(Expression e) {
 }
 
 private str translateActionListToInvokesAndReturn([list[Action] acs, Action lastAction], list[Definition] defs, str paramsInvoke) {
-	return "<for(action(ac) <- acs) {>
-		'	<ac>(paramsInvoke);
+	return 
+		"<for(action(ac) <- acs) {>
+			'<ac>(paramsInvoke);
 		'<}>
 		'<if (n := lastAction.name, fork([_*, immediate(), _*], name(n), _, _) <- defs) {>
-		'	return <getForkNameInvoke(lastAction)>(<paramsInvoke>); // immediate fork
+			'return <getForkNameInvoke(lastAction)>(<paramsInvoke>); // immediate fork
 		'<} else {>
-		'	return CASTTOGENERICPOINTER(<getForkNameInvoke(lastAction)>);
+			'return CASTTOGENERICPOINTER(<getForkNameInvoke(lastAction)>);
 		'<}>
 		";
 }
