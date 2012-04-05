@@ -16,7 +16,7 @@ public void writeStateMachine(loc directory, loc coordinator) {
 	for (m <- machines) {
 		writeStateMachine(directory, m);	
 	}
-	//writeCoordinator(directory, coor);
+	writeCoordinator(directory, coor);
 }
 
 private void checkForErrors(set[StateMachine] machines) {
@@ -40,6 +40,94 @@ private void writeStateMachine(loc directory, StateMachine sm) {
 	if (!exists(cFile)) {
 		writeDefaultCallback(cFile, sm);	
 	}
+}
+private void writeCoordinator(loc directory, Coordinator coor) {
+	loc hFile = directory[file="<coor.name>.h"];
+	loc cFile = directory[file="<coor.name>.cpp"];
+	loc hSharedStateFile = directory[file="SharedState.h"];
+	writeCoordinatorHeader(hFile, coor);
+	writeCoordinatorImplementation(cFile, coor);
+	if (!exists(hSharedStateFile)) {
+		writeStartSharedStateFile(hSharedStateFile);	
+	}
+}
+
+private void writeStartSharedStateFile(loc f) {
+	writeFile(f, cleanup("#IFNDEF SHAREDSTATE_H
+		'#DEFINE SHAREDSTATE_H
+		'//add your own fields to the struct 
+		'typedef struct {
+		'	
+		'} SharedStateInfo;
+		'typedef ShareStateInfo* SharedState;
+		'#ENDIF
+		"));
+}
+
+private void writeCoordinatorHeader(loc f, Coordinator coor) {
+	writeFile(f, cleanup("#IFNDEF <toUpperCase(coor.name)>_H
+	'#DEFINE <toUpperCase(coor.name)>_H
+	'/***************************************
+	'** This file is generated, do not edit! 
+	'** You can edit SharedState.h
+	'****************************************/
+	'#include \"SharedState.h\"
+	'<for(inv <- sort([*{n | invoke(n, _) <- coor.invokes}])) {>
+		'#include \"_SM<inv>.h\"
+	'<}>
+	'#include \<stdint.h\>
+	'#ifdef __cplusplus
+	'extern \"C\"{
+	'#endif	
+	
+	'void initialize(SharedState state);
+	'void performStep();
+	'int8_t canSleep();
+	
+	'#ifdef __cplusplus
+	'}
+	'#endif
+	'#ENDIF
+	"));
+}
+private void writeCoordinatorImplementation(loc f, Coordinator coor) {
+	list[tuple[str, str, str]] invokes = [
+		<n,	
+			size(ps) > 0 ? n + ("<head(ps)>" | "<it>_<p>" | p <- tail(ps)) : n, 
+			size(ps) > 0 ? (", <head(ps)>" | "<it>, <p>" | p <- tail(ps)) : "">
+		| invoke(n, ps) <- coor.invokes	
+	];
+	writeFile(f, cleanup("#include \"<coor.name>.h\"
+	'/***************************************
+	'** This file is generated, do not edit! 
+	'** You can edit SharedState.h
+	'****************************************/
+	'#include \"SharedState.h\"
+	'<for(inv <- sort([*{n | invoke(n, _) <- coor.invokes}])) {>
+		'#include \"_SM<inv>.h\"
+	'<}>
+	'<for(<_, inv, _> <- invokes) {>
+	'static void(*)() <inv> = NULL;
+	'<}>
+	'void initialize(SharedState state) {
+	'	<for(<n, inv, ps> <- invokes) {>
+		'	 <inv> = <n>_initialize(state <ps>);
+	'	<}>
+	'}
+	'
+	'void performStep() {
+	'	<for(<n, inv, ps> <- invokes) {>
+		'	 <inv> = <n>_takeStep(<inv> <ps>);
+	'	<}>
+	'}
+	'
+	'int8_t canSleep() {
+	'	return <
+			("<head(invokes)[0]>_isSleepableStep(<head(invokes)[1]>)" 
+				| it + "\n\t&& <n>_isSleepableStep(<inv>)"
+				| <n, inv,_> <- tail(invokes))>;
+	'}
+	"));
 }
 
 private str getParam(param(str t, str n)) = "<t> <n>";
