@@ -134,7 +134,7 @@ private void writeStateMachineHeader(loc f, StateMachine sm) {
 private str getParamInvoke(param(str t, str n)) = "<n>";
 
 private str getParamsInvoke(parameterized(_, [Parameter first, list[Parameter] rest])) {
-	 return (getParamInvoke(first) | it + ", " + getParam(m) | m <- rest);
+	 return (getParamInvoke(first) | it + ", " + getParamInvoke(m) | m <- rest);
 }
 
 private default str getParamsInvoke(StateMachineIdentifier smi) = "";
@@ -142,7 +142,7 @@ private default str getParamsInvoke(StateMachineIdentifier smi) = "";
 private str getParamTypes(param(str t, str n)) = "<t>";
 
 private str getParamsTypes(parameterized(_, [Parameter first, list[Parameter] rest])) {
-	 return (getParamTypes(first) | it + ", " + getParam(m) | m <- rest);
+	 return (getParamTypes(first) | it + ", " + getParamTypes(m) | m <- rest);
 }
 
 private default str getParamsTypes(StateMachineIdentifier smi) = "";
