@@ -63,7 +63,10 @@ private void writeCallbackHeader(loc f, StateMachine sm) {
 	'****************************************/
 	'#include \"SharedState.h\"
 	'#include \<stdint.h\>
-	'	
+	'#ifdef __cplusplus
+	'extern \"C\"{
+	'#endif	
+	
 	'void initialize(SharedState state <paramsNotFirst>);
 	'
 	'<for(action(ac) <- sort([ *{ *as | /[list[Action] as, _] <- sm}])) {>
@@ -72,6 +75,10 @@ private void writeCallbackHeader(loc f, StateMachine sm) {
 	'<for(cn <- sort([ *{ con | /single(str con) <- sm}])) { >
 		'uint8_t _con_<getConditionName(cn)>(<params>);
 	'<}>
+	
+	'#ifdef __cplusplus
+	'}
+	'#endif
 	'#ENDIF
 	");
 }
@@ -110,11 +117,17 @@ private void writeStateMachineHeader(loc f, StateMachine sm) {
 	'****************************************/
 	'#include \"SharedState.h\"
 	'#include \<stdint.h\>
-	'	
-	'void* <sm.name.name>_initialize(SharedState state <paramsNotFirst>);
-	'void* <sm.name.name>_takeStep(void* sm <paramsNotFirst>);
-	'uint8_t <sm.name.name>_isSleepableStep(void* sm);
-	'
+	'#ifdef __cplusplus
+	'extern \"C\"{
+	'#endif	
+	
+	'void(*)() <sm.name.name>_initialize(SharedState state <paramsNotFirst>);
+	'void(*)()  <sm.name.name>_takeStep(void(*)() sm <paramsNotFirst>);
+	'uint8_t <sm.name.name>_isSleepableStep(void(*)() sm);
+	
+	'#ifdef __cplusplus
+	'}
+	'#endif
 	'#ENDIF
 	");
 }
