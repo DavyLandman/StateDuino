@@ -162,23 +162,76 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'** You can edit SharedState.h or <sm.name.name>.cpp
 	'****************************************/
 	'#include \"<sm.name.name>.h\"
+	'#ifdef __cplusplus
+	'#define CASTTOGENERICPOINTER(method) reinterpret_cast\<void(*)()\>(method)
+	'#else
+	'#define CASTTOGENERICPOINTER(method) ((void(*)())method)
+	'#endif
 	'	
-	'void* <sm.name.name>_initialize(SharedState state <paramsNotFirst>) {
-	'	initialize(state, <paramsInvokeNotFirst>);
-	'	return reinterpret_cast\<void*\>(<getForkNameInvoke(sm.startFork)>); 
+	'void(*)() <sm.name.name>_initialize(SharedState state <paramsNotFirst>) {
+	'	initialize(state <paramsInvokeNotFirst>);
+	'	return CASTTOGENERICPOINTER(<getForkNameInvoke(sm.startFork)>); 
 	'}
 	'
-	'void* <sm.name.name>_takeStep(void* sm <paramsNotFirst>) {
+	'void(*)() <sm.name.name>_takeStep(void(*)() sm <paramsNotFirst>) {
+	'#ifdef __cplusplus
 	'	return reinterpret_cast\<void* (*)(<getParamsTypes(sm.name)>)\>(sm)(<paramsInvoke>);	
+	'#else
+	'	return ((void* (*)(<getParamsTypes(sm.name)>))sm)(<paramsInvoke>);	
+	'#endif
 	'}
 	'
-	'uint8_t <sm.name.name>_isSleepableStep(void* sm) {
+	'uint8_t <sm.name.name>_isSleepableStep(void(*)() sm) {
 	'	<for(fork([_*, sleepable(), _*], nm, _, _) <- sm.definitions) {>
-	'	if (sm == reinterpret_cast\<void*\>(<getForkNameInvoke(nm)>)) {
+	'	if (sm == CASTTOGENERICPOINTER(<getForkNameInvoke(nm)>)) {
 	'		return 1;
 	'	} 
 	'	<}>
 	'	return 0;
 	'}
+	'<for(frk <- sm.definitions) {>
+		'<generateForkBody(sm.definitions, frk,params, paramsInvoke)>
+	'<}>
 	");
+}
+
+private str generateForkBody(list[Definition] defs, fork(fkind, fname, preActions, paths), str params, str paramsInvoke) {
+	return 
+		"static void(*)() <getForkNameInvoke(fname)>(<params>) {
+			'	//pre actions
+			'<for(action(ac) <- preActions) {>
+			'	<ac>(paramsInvoke);
+			'<}>	
+			'<for(path(con, acs) <- paths) {>	
+			'	if (<translateCondition(con)>) {
+				'		<translateActionListToInvokesAndReturn(acs, defs, paramsInvoke)>
+			'	}
+			'<}>
+			'<if (d:defaultPath(acs) <- paths) {>
+			'	<translateActionListToInvokesAndReturn(acs, defs, paramsInvoke)>
+			'<} else {>
+			'	<translateActionListToInvokesAndReturn([action(fname.name)], defs, paramsInvoke)>
+			'<}>
+		'}
+		";
+}
+
+private str translateCondition(single(con)) = "<getConditionName(con)>()";
+private str translateCondition(negate(con)) = "!(<translateCondition(con)>)";
+private str translateCondition(and(lhs, rhs)) = "(<translateCondition(lhs)> && <translateCondition(rhs)>)";
+private str translateCondition(or(lhs, rhs)) = "(<translateCondition(lhs)> || <translateCondition(rhs)>)";
+private default str translateCondition(Expression e) {
+	throw "Unsupported expression! <e>";
+}
+
+private str translateActionListToInvokesAndReturn([list[Action] acs, Action lastAction], list[Definition] defs, str paramsInvoke) {
+	return "<for(action(ac) <- acs) {>
+		'	<ac>(paramsInvoke);
+		'<}>
+		'<if (n := lastAction.name, fork([_*, immediate(), _*], name(n), _, _) <- defs) {>
+		'	return <getForkNameInvoke(lastAction)>(<paramsInvoke>); // immediate fork
+		'<} else {>
+		'	return CASTTOGENERICPOINTER(<getForkNameInvoke(lastAction)>);
+		'<}>
+		";
 }
