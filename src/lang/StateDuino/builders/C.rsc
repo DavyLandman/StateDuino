@@ -53,20 +53,20 @@ private void writeCoordinator(loc directory, Coordinator coor) {
 }
 
 private void writeStartSharedStateFile(loc f) {
-	writeFile(f, cleanup("#IFNDEF SHAREDSTATE_H
-		'#DEFINE SHAREDSTATE_H
+	writeFile(f, cleanup("#ifndef SHAREDSTATE_H
+		'#define SHAREDSTATE_H
 		'//add your own fields to the struct 
 		'typedef struct {
 		'	
 		'} SharedStateInfo;
 		'typedef ShareStateInfo* SharedState;
-		'#ENDIF
+		'#endif
 		"));
 }
 
 private void writeCoordinatorHeader(loc f, Coordinator coor) {
-	writeFile(f, cleanup("#IFNDEF <toUpperCase(coor.name)>_H
-	'#DEFINE <toUpperCase(coor.name)>_H
+	writeFile(f, cleanup("#ifndef <toUpperCase(coor.name)>_H
+	'#define <toUpperCase(coor.name)>_H
 	'/***************************************
 	'** This file is generated, do not edit! 
 	'** You can edit SharedState.h
@@ -87,7 +87,7 @@ private void writeCoordinatorHeader(loc f, Coordinator coor) {
 	'#ifdef __cplusplus
 	'}
 	'#endif
-	'#ENDIF
+	'#endif
 	"));
 }
 private void writeCoordinatorImplementation(loc f, Coordinator coor) {
@@ -154,8 +154,8 @@ private str cleanup(str inp) {
 private void writeCallbackHeader(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
 	str paramsNotFirst = params == "" ? "" : ", " + params;
-	writeFile(f, cleanup("#IFNDEF <toUpperCase(sm.name.name)>_H
-	'#DEFINE <toUpperCase(sm.name.name)>_H
+	writeFile(f, cleanup("#ifndef <toUpperCase(sm.name.name)>_H
+	'#define <toUpperCase(sm.name.name)>_H
 	'/***************************************
 	'** This file is generated, do not edit! 
 	'** You can edit SharedState.h or <sm.name.name>.cpp
@@ -178,7 +178,7 @@ private void writeCallbackHeader(loc f, StateMachine sm) {
 	'#ifdef __cplusplus
 	'}
 	'#endif
-	'#ENDIF
+	'#endif
 	"));
 }
 
@@ -208,8 +208,8 @@ private void writeDefaultCallback(loc f, StateMachine sm) {
 private void writeStateMachineHeader(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
 	str paramsNotFirst = params == "" ? "" : ", " + params;
-	writeFile(f, cleanup("#IFNDEF _SM<toUpperCase(sm.name.name)>_H
-	'#DEFINE _SM<toUpperCase(sm.name.name)>_H
+	writeFile(f, cleanup("#ifndef _SM<toUpperCase(sm.name.name)>_H
+	'#define _SM<toUpperCase(sm.name.name)>_H
 	'/***************************************
 	'** This file is generated, do not edit! 
 	'** You can edit SharedState.h or <sm.name.name>.cpp
@@ -227,7 +227,7 @@ private void writeStateMachineHeader(loc f, StateMachine sm) {
 	'#ifdef __cplusplus
 	'}
 	'#endif
-	'#ENDIF
+	'#endif
 	"));
 }
 private str getParamInvoke(param(str t, str n)) = "<n>";
