@@ -28,6 +28,26 @@ public test bool checkGlobalActionsAreNestedRespectingScope() {
 		return false;
 	}
 }
+public test bool checkChainsAreInsertedIntoNestedForks() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> A1; c2? =\> fork F1 { c2? =\> A1; }  } chain A1 { A2; T1; }");
+	if (/fork(_, name("F1"), [], [path(_, [action("A2"), action("T1")])])  := result) {
+		return true;
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
+}
+public test bool checkChainsAreInsertedIntoNestedNamelessForks() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork { c1? =\> A1; c2? =\> fork F1 { c2? =\> A1; }  } chain A1 { A2; T1; }");
+	if (/fork(_, _, [], [path(_, [action("A2"), action("T1")])])  := result) {
+		return true;
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
+}
 public test bool checkChainedChainsActionsAreNested() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> A1; } chain A1 { A2; A1_2; } chain A1_2 { A3; T1; }");
 	if (/fork(_, name("T1"), [], [path(_, [action("A2"), action("A3"), action("T1")])])  := result) {
@@ -38,6 +58,17 @@ public test bool checkChainedChainsActionsAreNested() {
 		return false;
 	}
 }
+public test bool checkChainedChainsActionsAreNested2() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> A1; } chain A1 { A2; fork { x? =\> A1_2; } } chain A1_2 { A3; T1; }");
+	if (/fork(_, _, [], [path(_, [action("A3"), action("T1")])])  := result) {
+		return true;
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
+}
+
 public test bool checkChainsAreNestedInPreActions() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 {A1; c1? =\> T1; } chain A1 { A2; A3; }");
 	if (/fork(_, name("T1"), [action("A2"), action("A3")], _)  := result) {

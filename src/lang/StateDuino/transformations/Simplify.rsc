@@ -36,7 +36,6 @@ private StateMachine inlineChains(StateMachine complex) {
 			}
 		}
 	}
-	
 	list[Action] replaceActions(list[Action] acts, set[str] nestedForkNames) {
 		list[Action] result = [];
 		for (a <- acts) {
@@ -64,6 +63,10 @@ private StateMachine inlineChains(StateMachine complex) {
 		newPreActions = replaceActions(def.preActions, nestedForkNames);
 		return def[paths= newPaths][preActions = newPreActions];
 	};	
+	// check forks inside chains
+	for (cn <- chainActions) {
+		chainActions[cn] = replaceActions(chainActions[cn], {cn});	
+	}
 	list[Definition] newDefinitions = [replaceActions(f, {}) | f:fork(_,_,_,_) <- complex.definitions];
 	return complex[definitions = newDefinitions];
 }
