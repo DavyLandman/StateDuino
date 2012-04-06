@@ -31,9 +31,9 @@ private void checkForErrors(set[StateMachine] machines) {
 
 private void writeStateMachine(loc directory, StateMachine sm) {
 	loc hFile = directory[file="<sm.name.name>.h"];
-	loc cFile = directory[file="<sm.name.name>.cpp"];
+	loc cFile = directory[file="<sm.name.name>.c"];
 	loc hSMFile = directory[file="_SM<sm.name.name>.h"];
-	loc cSMFile = directory[file="_SM<sm.name.name>.cpp"];
+	loc cSMFile = directory[file="_SM<sm.name.name>.c"];
 	writeStateMachineHeader(hSMFile, sm);
 	writeStateMachineImplementation(cSMFile, sm);
 	writeCallbackHeader(hFile, sm);
@@ -43,7 +43,7 @@ private void writeStateMachine(loc directory, StateMachine sm) {
 }
 private void writeCoordinator(loc directory, Coordinator coor) {
 	loc hFile = directory[file="<coor.name>.h"];
-	loc cFile = directory[file="<coor.name>.cpp"];
+	loc cFile = directory[file="<coor.name>.c"];
 	loc hSharedStateFile = directory[file="SharedState.h"];
 	writeCoordinatorHeader(hFile, coor);
 	writeCoordinatorImplementation(cFile, coor);
@@ -55,11 +55,17 @@ private void writeCoordinator(loc directory, Coordinator coor) {
 private void writeStartSharedStateFile(loc f) {
 	writeFile(f, cleanup("#ifndef SHAREDSTATE_H
 		'#define SHAREDSTATE_H
+		'#ifdef __cplusplus
+		'extern \"C\"{
+		'#endif	
 		'//add your own fields to the struct 
 		'typedef struct {
 		'	
 		'} SharedStateInfo;
-		'typedef ShareStateInfo* SharedState;
+		'typedef SharedStateInfo* SharedState;
+		'#ifdef __cplusplus
+		'}
+		'#endif	
 		'#endif
 		"));
 }
@@ -80,9 +86,9 @@ private void writeCoordinatorHeader(loc f, Coordinator coor) {
 	'extern \"C\"{
 	'#endif	
 	
-	'void initialize(SharedState state);
-	'void performStep();
-	'int8_t canSleep();
+	'void <coor.name>_initialize(SharedState state);
+	'void <coor.name>_performStep();
+	'int8_t <coor.name>_canSleep();
 	
 	'#ifdef __cplusplus
 	'}
@@ -102,29 +108,35 @@ private void writeCoordinatorImplementation(loc f, Coordinator coor) {
 	'** This file is generated, do not edit! 
 	'** You can edit SharedState.h
 	'****************************************/
+	'#ifdef __cplusplus
+	'#include \<cstdlib.h\>
+	'#else
+	'#include \<stdlib.h\>
+	'#endif
+	
 	'#include \"SharedState.h\"
 	'<for(inv <- sort([*{n | invoke(n, _) <- coor.invokes}])) {>
 		'#include \"_SM<inv>.h\"
 	'<}>
 	'<for(<_, inv, _> <- invokes) {>
-	'static void(*)() <inv> = NULL;
+	'static void* <inv> = NULL;
 	'<}>
-	'void initialize(SharedState state) {
+	'void <coor.name>_initialize(SharedState state) {
 	'	<for(<n, inv, ps> <- invokes) {>
 		'	 <inv> = <n>_initialize(state <ps>);
 	'	<}>
 	'}
 	'
-	'void performStep() {
+	'void <coor.name>_performStep() {
 	'	<for(<n, inv, ps> <- invokes) {>
-		'	 <inv> = <n>_takeStep(<inv> <ps>);
+		'	 <n>_takeStep(<inv> <ps>);
 	'	<}>
 	'}
 	'
-	'int8_t canSleep() {
+	'int8_t <coor.name>_canSleep() {
 	'	return <
 			("<head(invokes)[0]>_isSleepableStep(<head(invokes)[1]>)" 
-				| it + "\n\t&& <n>_isSleepableStep(<inv>)"
+				| it + "\n&& <n>_isSleepableStep(<inv>)"
 				| <n, inv,_> <- tail(invokes))>;
 	'}
 	"));
@@ -168,7 +180,7 @@ private void writeCallbackHeader(loc f, StateMachine sm) {
 	
 	'void initialize(SharedState state <paramsNotFirst>);
 	'
-	'<for(action(ac) <- sort([ *{ *as | /[list[Action] as, _] <- sm}])) {>
+	'<for(action(ac) <- sort([ *({ *as | /[list[Action] as, _] <- sm} + {*as | /fork(_,_,as, _) <- sm})])) {>
 		'void <ac>(<params>);
 	'<}>
 	'<for(cn <- sort([ *{ con | /single(str con) <- sm}])) { >
@@ -192,7 +204,7 @@ private void writeDefaultCallback(loc f, StateMachine sm) {
 	'
 	'}
 	'
-	'<for(action(ac) <- sort([ *{ *as | /[list[Action] as, _] <- sm}])) {>
+	'<for(action(ac) <- sort([ *({ *as | /[list[Action] as, _] <- sm} + {*as | /fork(_,_,as, _) <- sm})])) {>
 		'void <ac>(<params>) {
 		'
 		'}
@@ -217,12 +229,17 @@ private void writeStateMachineHeader(loc f, StateMachine sm) {
 	'#include \"SharedState.h\"
 	'#include \<stdint.h\>
 	'#ifdef __cplusplus
+	'#include \<cstdlib.h\>
+	'#else
+	'#include \<stdlib.h\>
+	'#endif
+	'#ifdef __cplusplus
 	'extern \"C\"{
 	'#endif	
 	
-	'void(*)() <sm.name.name>_initialize(SharedState state <paramsNotFirst>);
-	'void(*)()  <sm.name.name>_takeStep(void(*)() sm <paramsNotFirst>);
-	'uint8_t <sm.name.name>_isSleepableStep(void(*)() sm);
+	'void* <sm.name.name>_initialize(SharedState state <paramsNotFirst>);
+	'void <sm.name.name>_takeStep(void* sm <paramsNotFirst>);
+	'uint8_t <sm.name.name>_isSleepableStep(const void* sm);
 	
 	'#ifdef __cplusplus
 	'}
@@ -253,6 +270,8 @@ private str getForkNameInvoke(name(str nm)) = "_<nm>";
 private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	str params = getParams(sm.name);
 	str paramsNotFirst = params == "" ? "" : ", " + params;
+	str paramsTypes = getParamsTypes(sm.name);
+	str paramsTypesNotFirst = paramsTypes == "" ? "" : ", " + paramsTypes;
 	str paramsInvoke = getParamsInvoke(sm.name);
 	str paramsInvokeNotFirst = paramsInvoke == "" ? "" : ", " + paramsInvoke;
 	writeFile(f, cleanup("#include \"_SM<sm.name.name>.h\"
@@ -261,48 +280,62 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'** You can edit SharedState.h or <sm.name.name>.cpp
 	'****************************************/
 	'#include \"<sm.name.name>.h\"
-	'#ifdef __cplusplus
-	'#define CASTTOGENERICPOINTER(method) reinterpret_cast\<void(*)()\>(method)
-	'#else
-	'#define CASTTOGENERICPOINTER(method) ((void(*)())method)
-	'#endif
+	'struct State;
+	'typedef void (*StatePointer)(struct State* <paramsTypesNotFirst>);
+	'struct State {
+	'	StatePointer nextState;
+	'};
+	'<for(fork(_, fname, _, _) <- sm.definitions) {>
+		'static void <getForkNameInvoke(fname)>(struct State* sm <paramsNotFirst>);
+	'<}>
 	'	
-	'void(*)() <sm.name.name>_initialize(SharedState state <paramsNotFirst>) {
+	'void* <sm.name.name>_initialize(SharedState state <paramsNotFirst>) {
 	'	initialize(state <paramsInvokeNotFirst>);
-	'	return CASTTOGENERICPOINTER(<getForkNameInvoke(sm.startFork)>); 
+	'#ifdef __cplusplus
+	'	struct State* result = reinterpret_cast\<struct State*\>(malloc(sizeof(struct State)));
+	'#else
+	'	struct State* result = (struct State*)malloc(sizeof(struct State));
+	'#endif
+	'	result-\>nextState = <getForkNameInvoke(sm.startFork)>;
+	'	return result; 
 	'}
 	'
-	'void(*)() <sm.name.name>_takeStep(void(*)() sm <paramsNotFirst>) {
+	'void <sm.name.name>_takeStep(void* sm <paramsNotFirst>) {
 	'#ifdef __cplusplus
-	'	return reinterpret_cast\<void* (*)(<getParamsTypes(sm.name)>)\>(sm)(<paramsInvoke>);	
+	'	reinterpret_cast\<struct State*\>(sm)-\>nextState(reinterpret_cast\<struct State*\>(sm) <paramsInvokeNotFirst>);	
 	'#else
-	'	return ((void* (*)(<getParamsTypes(sm.name)>))sm)(<paramsInvoke>);	
+	'	((struct State*)sm)-\>nextState(((struct State*)sm) <paramsInvokeNotFirst>);	
 	'#endif
 	'}
 	'
-	'uint8_t <sm.name.name>_isSleepableStep(void(*)() sm) {
+	'uint8_t <sm.name.name>_isSleepableStep(const void* sm) {
+	'#ifdef __cplusplus
+	'	StatePointer nextState = reinterpret_cast\<struct State*\>(sm)-\>nextState;
+	'#else
+	'	StatePointer nextState = ((struct State*)sm)-\>nextState;
+	'#endif
 	'	<for(fork([_*, sleepable(), _*], nm, _, _) <- sm.definitions) {>
-	'	if (sm == CASTTOGENERICPOINTER(<getForkNameInvoke(nm)>)) {
-	'		return 1;
-	'	} 
+		'	if (nextState == <getForkNameInvoke(nm)>) {
+		'		return 1;
+		'	} 
 	'	<}>
 	'	return 0;
 	'}
 	'<for(frk <- sm.definitions) {>
-		'<generateForkBody(sm.definitions, frk,params, paramsInvoke)>
+		'<generateForkBody(sm.definitions, frk,paramsNotFirst, paramsInvoke)>
 	'<}>
 	"));
 }
 
-private str generateForkBody(list[Definition] defs, fork(fkind, fname, preActions, paths), str params, str paramsInvoke) {
+private str generateForkBody(list[Definition] defs, fork(fkind, fname, preActions, paths), str paramsNotFirst, str paramsInvoke) {
 	return 
-		"static void(*)() <getForkNameInvoke(fname)>(<params>) {
+		"static void <getForkNameInvoke(fname)>(struct State* sm <paramsNotFirst>) {
 			'	//pre actions
 			'<for(action(ac) <- preActions) {>
-			'	<ac>(paramsInvoke);
+			'	<ac>(<paramsInvoke>);
 			'<}>	
 			'<for(path(con, acs) <- paths) {>	
-			'	if (<translateCondition(con)>) {
+			'	if (<translateCondition(con, paramsInvoke)>) {
 				'		<translateActionListToInvokesAndReturn(acs, defs, paramsInvoke)>
 			'	}
 			'<}>
@@ -315,23 +348,25 @@ private str generateForkBody(list[Definition] defs, fork(fkind, fname, preAction
 		";
 }
 
-private str translateCondition(single(con)) = "<getConditionName(con)>()";
-private str translateCondition(negate(con)) = "!(<translateCondition(con)>)";
-private str translateCondition(and(lhs, rhs)) = "(<translateCondition(lhs)> && <translateCondition(rhs)>)";
-private str translateCondition(or(lhs, rhs)) = "(<translateCondition(lhs)> || <translateCondition(rhs)>)";
-private default str translateCondition(Expression e) {
+private str translateCondition(single(con), str params) = "_con_<getConditionName(con)>(<params>)";
+private str translateCondition(negate(con), str params) = "!(<translateCondition(con, params)>)";
+private str translateCondition(and(lhs, rhs), str params) = "(<translateCondition(lhs, params)> && <translateCondition(rhs, params)>)";
+private str translateCondition(or(lhs, rhs), str params) = "(<translateCondition(lhs, params)> || <translateCondition(rhs, params)>)";
+private default str translateCondition(Expression e, str params) {
 	throw "Unsupported expression! <e>";
 }
 
 private str translateActionListToInvokesAndReturn([list[Action] acs, Action lastAction], list[Definition] defs, str paramsInvoke) {
 	return 
 		"<for(action(ac) <- acs) {>
-			'<ac>(paramsInvoke);
+			'<ac>(<paramsInvoke>);
 		'<}>
 		'<if (n := lastAction.name, fork([_*, immediate(), _*], name(n), _, _) <- defs) {>
-			'return <getForkNameInvoke(lastAction)>(<paramsInvoke>); // immediate fork
+			'<getForkNameInvoke(lastAction)>(sm <paramsInvoke == "" ? "" : ", " + paramsInvoke>); // immediate fork
+			'return;
 		'<} else {>
-			'return CASTTOGENERICPOINTER(<getForkNameInvoke(lastAction)>);
+			'sm-\>nextState = <getForkNameInvoke(lastAction)>;
+			'return;
 		'<}>
 		";
 }
