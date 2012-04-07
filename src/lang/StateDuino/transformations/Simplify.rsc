@@ -111,19 +111,21 @@ private StateMachine inlineChains(StateMachine complex) {
 // assumes no chains, no definition loops, no nameless forks
 private StateMachine unnestForks(StateMachine sm) {
 	map[str, str] namesSeen = (nm:nm | fork(_, name(nm), _, _) <- sm.definitions);
+	map[str, Definition] globalForks = (nm:f | f:fork(_, name(nm), _, _) <- sm.definitions);
 	list[Definition] newDefinitions = [];
 	tuple[Definition, map[str, str]] renameAndUnnest(Definition f, map[str, str] alreadyRenamed) {
 		list[ConditionalPath] newPaths = [];
 		for (p <- f.paths) {
 			if (definition(fn:fork(_, name(nm), _, _)) := last(p.actions)) {
 				str newName = nm;
-				while (alreadyRenamed[newName]?) {
+				while (alreadyRenamed[newName]? && fn != globalForks[newName]) {
 					newName = "_" + newName;
 				}
 				<fn, newNames> = renameAndUnnest(fn, alreadyRenamed + (nm : newName));		
 				alreadyRenamed += newNames;
 				alreadyRenamed[newName] = newName;
 				newDefinitions += [fn[name = fn.name[name = newName]]];
+				globalForks[newName] = fn[name = fn.name[name = newName]];
 				newPaths += [p[actions = prefix(p.actions) + [action(newName)[@location = f@location]]]];
 			} 
 			else {
@@ -142,5 +144,13 @@ private StateMachine unnestForks(StateMachine sm) {
 		rewroteDefinitions += [f];
 		namesSeen += newNames;	
 	}
-	return sm[definitions = rewroteDefinitions + newDefinitions];
+	set[Definition] alreadyDefined = {};
+	list[Definition] resultDefinitions =  []; 
+	for (d <- rewroteDefinitions + newDefinitions) {
+		if (!(d in alreadyDefined)) {
+			resultDefinitions += [d];
+			alreadyDefined += {d};
+		}	
+	}
+	return sm[definitions = resultDefinitions];
 }
