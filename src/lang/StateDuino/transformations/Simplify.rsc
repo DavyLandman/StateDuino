@@ -83,10 +83,8 @@ private StateMachine unnestForks(StateMachine sm) {
 				while (alreadyRenamed[newName]?) {
 					newName = "_" + newName;
 				}
-				if (newName != nm) {
-					<fn, newNames> = renameAndUnnest(fn, alreadyRenamed + (nm : newName));		
-					alreadyRenamed += newNames;
-				}
+				<fn, newNames> = renameAndUnnest(fn, alreadyRenamed + (nm : newName));		
+				alreadyRenamed += newNames;
 				alreadyRenamed[newName] = newName;
 				newDefinitions += [fn[name = fn.name[name = newName]]];
 				newPaths += [p[actions = prefix(p.actions) + [action(newName)[@location = f@location]]]];
