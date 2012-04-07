@@ -148,3 +148,14 @@ public test bool checkForkUnnestingWorksWhenInsideChains() {
 		return false;
 	}
 }
+
+public test bool checkCorrectlyRemovesSelfReferences() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> self; }  ");
+	if (fork(_, name("T1"), _, [path(_, [action("T1")])]) <- result.definitions) {
+		return true;
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
+}

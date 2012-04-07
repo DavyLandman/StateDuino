@@ -10,6 +10,7 @@ import lang::StateDuino::ast::Main;
 public StateMachine simplify(StateMachine complex) {
 	StateMachine result = complex;
 	result = removeUnnamedForks(result);
+	result = removeSelfReferences(result);
 	result = inlineChains(result);
 	result = unnestForks(result);
 	return result;
@@ -23,6 +24,42 @@ private StateMachine removeUnnamedForks(StateMachine sm) {
 			insert fork(types, newName , pre, paths)[@location = f@location];
 		}
 	};
+}
+
+private StateMachine removeSelfReferences(StateMachine sm) {
+	list[Definition] newDefinitions = [];
+	for (d <- sm.definitions) {
+		switch(d) {
+			case chain(_,_) : newDefinitions += [d];
+			case fork(_,_,_,_) : newDefinitions += [removeSelfReferences(d)];
+			default : throw "Case <d> forgotten";
+		}	
+	}
+	return sm[definitions = newDefinitions];
+}
+
+private Definition removeSelfReferences(f:fork(_,nm, _, paths)) {
+	list[ConditionalPath] newPaths = [];
+	for (p <- paths) {
+		newPaths += [p[actions=removeSelfReferences(p.actions, nm.name)]];
+	}
+	return f[paths = newPaths];
+}
+private list[Action] removeSelfReferences(list[Action] acs, str nm) {
+	list[Action] newActions = [];
+	for (a <- acs) {
+		switch(a) {
+			case action("self") : newActions += [a[name=nm]];
+			case action(_) : newActions += [a];
+			case definition(d) : newActions += [a[definition= removeSelfReferences(d)]];
+			default : throw "Case <a> forgotten";
+		}	
+	}
+	return newActions;
+}
+
+private default Definition removeSelfReferences(Definition d) {
+	throw "Not supported definition";
 }
 
 private StateMachine inlineChains(StateMachine complex) {
