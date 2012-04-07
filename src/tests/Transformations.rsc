@@ -109,9 +109,38 @@ public test bool checkForkUnnestingWorks2() {
 		return false;
 	}
 }
+public test bool checkForkUnnestingWorks3() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> fork T1 { c2? =\> fork T2 { c1? =\> A3; T1; } } } ");
+	if (fork(_, name(nm), _, [path(_, [action("T2")])]) <- result.definitions) {
+		if (fork(_, _, _, [path(_, [action("A3"), action(nm)])]) <- result.definitions) {
+			return true;
+		}
+		else {
+			println("Not respecting shadowing!");
+			iprintln(result);
+			return false;
+		}
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
+}
 public test bool checkForkUnnestingWorksWithRenewDefinitions() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> fork T1 { c2? =\> A1; fork T1 { c3? =\> A2; T1; } } } ");
 	if (fork(_, name(nm), _, [path(_, [action("A2"), action(nm)])]) <- result.definitions) {
+		return true;
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
+}
+
+
+public test bool checkForkUnnestingWorksWhenInsideChains() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> C1; } chain C1 { A1; fork T2 { c2? =\> A2; A3; C2; } } chain C2 { fork T3 { c4? =\> A4; A4; T1; } }  ");
+	if (fork(_, name("T2"), _, [path(_, [action("A2"), action("A3"), action("T3")])]) <- result.definitions) {
 		return true;
 	}
 	else {
