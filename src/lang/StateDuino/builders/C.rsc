@@ -108,11 +108,7 @@ private void writeCoordinatorImplementation(loc f, Coordinator coor) {
 	'** This file is generated, do not edit! 
 	'** You can edit SharedState.h
 	'****************************************/
-	'#ifdef __cplusplus
-	'#include \<cstdlib.h\>
-	'#else
 	'#include \<stdlib.h\>
-	'#endif
 	
 	'#include \"SharedState.h\"
 	'<for(inv <- sort([*{n | invoke(n, _) <- coor.invokes}])) {>
@@ -228,11 +224,7 @@ private void writeStateMachineHeader(loc f, StateMachine sm) {
 	'****************************************/
 	'#include \"SharedState.h\"
 	'#include \<stdint.h\>
-	'#ifdef __cplusplus
-	'#include \<cstdlib.h\>
-	'#else
 	'#include \<stdlib.h\>
-	'#endif
 	'#ifdef __cplusplus
 	'extern \"C\"{
 	'#endif	
