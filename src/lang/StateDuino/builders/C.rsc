@@ -276,6 +276,7 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'typedef void (*StatePointer)(struct State* <paramsTypesNotFirst>);
 	'struct State {
 	'	StatePointer nextState;
+	'	uint8_t sleepable;
 	'};
 	'<for(fork(_, fname, _, _) <- sm.definitions) {>
 		'static void <getForkNameInvoke(fname)>(struct State* sm <paramsNotFirst>);
@@ -288,6 +289,11 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'#else
 	'	struct State* result = (struct State*)malloc(sizeof(struct State));
 	'#endif
+	'<if(nm := sm.startFork, fork([_*, sleepable(), _*], nm, _, _) <- sm.definitions) {>
+	'	result-\>sleepable = 1;
+	<} else {>
+	'	result-\>sleepable = 0;
+	<}>
 	'	result-\>nextState = <getForkNameInvoke(sm.startFork)>;
 	'	return result; 
 	'}
@@ -302,16 +308,10 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'
 	'uint8_t <sm.name.name>_isSleepableStep(const void* sm) {
 	'#ifdef __cplusplus
-	'	StatePointer nextState = reinterpret_cast\<struct State*\>(sm)-\>nextState;
+	'	return reinterpret_cast\<struct State*\>(sm)-\>sleepable;
 	'#else
-	'	StatePointer nextState = ((struct State*)sm)-\>nextState;
+	'	return ((struct State*)sm)-\>sleepable;
 	'#endif
-	'	<for(fork([_*, sleepable(), _*], nm, _, _) <- sm.definitions) {>
-		'	if (nextState == <getForkNameInvoke(nm)>) {
-		'		return 1;
-		'	} 
-	'	<}>
-	'	return 0;
 	'}
 	'<for(frk <- sm.definitions) {>
 		'<generateForkBody(sm.definitions, frk,paramsNotFirst, paramsInvoke)>
@@ -349,14 +349,21 @@ private default str translateCondition(Expression e, str params) {
 }
 
 private str translateActionListToInvokesAndReturn([list[Action] acs, Action lastAction], list[Definition] defs, str paramsInvoke) {
+	str nm = lastAction.name;
+	list[ForkType] forkTypes = [*ft | fork(ft, name(nm), _, _) <- defs];
 	return 
 		"<for(action(ac) <- acs) {>
 			'<ac>(<paramsInvoke>);
 		'<}>
-		'<if (n := lastAction.name, fork([_*, immediate(), _*], name(n), _, _) <- defs) {>
+		'<if (immediate() in forkTypes) {>
 			'<getForkNameInvoke(lastAction)>(sm <paramsInvoke == "" ? "" : ", " + paramsInvoke>); // immediate fork
 			'return;
 		'<} else {>
+			'<if(sleepable() in forkTypes) {>
+				'sm-\>sleepable = 1;
+			<} else {>
+				'sm-\>sleepable = 0;
+			<}>
 			'sm-\>nextState = <getForkNameInvoke(lastAction)>;
 			'return;
 		'<}>
