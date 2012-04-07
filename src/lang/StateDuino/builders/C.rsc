@@ -119,20 +119,20 @@ private void writeCoordinatorImplementation(loc f, Coordinator coor) {
 	'<}>
 	'void <coor.name>_initialize(SharedState state) {
 	'	<for(<n, inv, ps> <- invokes) {>
-		'	 <inv> = <n>_initialize(state <ps>);
+		'	 <inv> = SM_<n>_initialize(state <ps>);
 	'	<}>
 	'}
 	'
 	'void <coor.name>_performStep() {
 	'	<for(<n, inv, ps> <- invokes) {>
-		'	 <n>_takeStep(<inv> <ps>);
+		'	 SM_<n>_takeStep(<inv> <ps>);
 	'	<}>
 	'}
 	'
 	'int8_t <coor.name>_canSleep() {
 	'	return <
-			("<head(invokes)[0]>_isSleepableStep(<head(invokes)[1]>)" 
-				| it + "\n&& <n>_isSleepableStep(<inv>)"
+			("SM_<head(invokes)[0]>_isSleepableStep(<head(invokes)[1]>)" 
+				| it + "\n&& SM_<n>_isSleepableStep(<inv>)"
 				| <n, inv,_> <- tail(invokes))>;
 	'}
 	"));
@@ -174,13 +174,13 @@ private void writeCallbackHeader(loc f, StateMachine sm) {
 	'extern \"C\"{
 	'#endif	
 	
-	'void initialize(SharedState state <paramsNotFirst>);
+	'void <sm.name.name>_initialize(SharedState state <paramsNotFirst>);
 	'
 	'<for(action(ac) <- sort([ *({ *as | /[list[Action] as, _] <- sm} + {*as | /fork(_,_,as, _) <- sm})])) {>
-		'void <ac>(<params>);
+		'void <sm.name.name>_<ac>(<params>);
 	'<}>
 	'<for(cn <- sort([ *{ con | /single(str con) <- sm}])) { >
-		'uint8_t _con_<getConditionName(cn)>(<params>);
+		'uint8_t _<sm.name.name>_con_<getConditionName(cn)>(<params>);
 	'<}>
 	
 	'#ifdef __cplusplus
@@ -196,17 +196,17 @@ private void writeDefaultCallback(loc f, StateMachine sm) {
 	str paramsNotFirst = params == "" ? "" : ", " + params;
 	writeFile(f, cleanup("#include \"<sm.name.name>.h\"
 	'	
-	'void initialize(SharedState state <paramsNotFirst>) {
+	'void <sm.name.name>_initialize(SharedState state <paramsNotFirst>) {
 	'
 	'}
 	'
 	'<for(action(ac) <- sort([ *({ *as | /[list[Action] as, _] <- sm} + {*as | /fork(_,_,as, _) <- sm})])) {>
-		'void <ac>(<params>) {
+		'void <sm.name.name>_<ac>(<params>) {
 		'
 		'}
 	'<}>
 	'<for(cn <- sort([ *{ con | /single(str con) <- sm}])) { >
-		'uint8_t _con_<getConditionName(cn)>(<params>) {
+		'uint8_t _<sm.name.name>_con_<getConditionName(cn)>(<params>) {
 		'\treturn 1;
 		'}
 	'<}>
@@ -229,9 +229,9 @@ private void writeStateMachineHeader(loc f, StateMachine sm) {
 	'extern \"C\"{
 	'#endif	
 	
-	'void* <sm.name.name>_initialize(SharedState state <paramsNotFirst>);
-	'void <sm.name.name>_takeStep(void* sm <paramsNotFirst>);
-	'uint8_t <sm.name.name>_isSleepableStep(const void* sm);
+	'void* SM_<sm.name.name>_initialize(SharedState state <paramsNotFirst>);
+	'void SM_<sm.name.name>_takeStep(void* sm <paramsNotFirst>);
+	'uint8_t SM_<sm.name.name>_isSleepableStep(const void* sm);
 	
 	'#ifdef __cplusplus
 	'}
@@ -282,8 +282,8 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 		'static void <getForkNameInvoke(fname)>(struct State* sm <paramsNotFirst>);
 	'<}>
 	'	
-	'void* <sm.name.name>_initialize(SharedState state <paramsNotFirst>) {
-	'	initialize(state <paramsInvokeNotFirst>);
+	'void* SM_<sm.name.name>_initialize(SharedState state <paramsNotFirst>) {
+	'	<sm.name.name>_initialize(state <paramsInvokeNotFirst>);
 	'#ifdef __cplusplus
 	'	struct State* result = reinterpret_cast\<struct State*\>(malloc(sizeof(struct State)));
 	'#else
@@ -298,7 +298,7 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'	return result; 
 	'}
 	'
-	'void <sm.name.name>_takeStep(void* sm <paramsNotFirst>) {
+	'void SM_<sm.name.name>_takeStep(void* sm <paramsNotFirst>) {
 	'#ifdef __cplusplus
 	'	reinterpret_cast\<struct State*\>(sm)-\>nextState(reinterpret_cast\<struct State*\>(sm) <paramsInvokeNotFirst>);	
 	'#else
@@ -306,7 +306,7 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'#endif
 	'}
 	'
-	'uint8_t <sm.name.name>_isSleepableStep(const void* sm) {
+	'uint8_t SM_<sm.name.name>_isSleepableStep(const void* sm) {
 	'#ifdef __cplusplus
 	'	return reinterpret_cast\<struct State*\>(sm)-\>sleepable;
 	'#else
@@ -314,46 +314,46 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'#endif
 	'}
 	'<for(frk <- sm.definitions) {>
-		'<generateForkBody(sm.definitions, frk,paramsNotFirst, paramsInvoke)>
+		'<generateForkBody(sm.name.name, sm.definitions, frk, paramsNotFirst, paramsInvoke)>
 	'<}>
 	"));
 }
 
-private str generateForkBody(list[Definition] defs, fork(fkind, fname, preActions, paths), str paramsNotFirst, str paramsInvoke) {
+private str generateForkBody(str nm, list[Definition] defs, fork(fkind, fname, preActions, paths), str paramsNotFirst, str paramsInvoke) {
 	return 
 		"static void <getForkNameInvoke(fname)>(struct State* sm <paramsNotFirst>) {
 			'	//pre actions
 			'<for(action(ac) <- preActions) {>
-			'	<ac>(<paramsInvoke>);
+			'	<nm>_<ac>(<paramsInvoke>);
 			'<}>	
 			'<for(path(con, acs) <- paths) {>	
-			'	if (<translateCondition(con, paramsInvoke)>) {
-				'		<translateActionListToInvokesAndReturn(acs, defs, paramsInvoke)>
+			'	if (<translateCondition(nm, con, paramsInvoke)>) {
+				'		<translateActionListToInvokesAndReturn(nm, acs, defs, paramsInvoke)>
 			'	}
 			'<}>
 			'<if (d:defaultPath(acs) <- paths) {>
-			'	<translateActionListToInvokesAndReturn(acs, defs, paramsInvoke)>
+			'	<translateActionListToInvokesAndReturn(nm, acs, defs, paramsInvoke)>
 			'<} else {>
-			'	<translateActionListToInvokesAndReturn([action(fname.name)], defs, paramsInvoke)>
+			'	<translateActionListToInvokesAndReturn(nm, [action(fname.name)], defs, paramsInvoke)>
 			'<}>
 		'}
 		";
 }
 
-private str translateCondition(single(con), str params) = "_con_<getConditionName(con)>(<params>)";
-private str translateCondition(negate(con), str params) = "!(<translateCondition(con, params)>)";
-private str translateCondition(and(lhs, rhs), str params) = "(<translateCondition(lhs, params)> && <translateCondition(rhs, params)>)";
-private str translateCondition(or(lhs, rhs), str params) = "(<translateCondition(lhs, params)> || <translateCondition(rhs, params)>)";
-private default str translateCondition(Expression e, str params) {
+private str translateCondition(str nm, single(con), str params) = "_<nm>_con_<getConditionName(con)>(<params>)";
+private str translateCondition(str nm, negate(con), str params) = "!(<translateCondition(nm, con, params)>)";
+private str translateCondition(str nm, and(lhs, rhs), str params) = "(<translateCondition(nm, lhs, params)> && <translateCondition(nm, rhs, params)>)";
+private str translateCondition(str nm, or(lhs, rhs), str params) = "(<translateCondition(nm, lhs, params)> || <translateCondition(nm, rhs, params)>)";
+private default str translateCondition(str nm, Expression e, str params) {
 	throw "Unsupported expression! <e>";
 }
 
-private str translateActionListToInvokesAndReturn([list[Action] acs, Action lastAction], list[Definition] defs, str paramsInvoke) {
+private str translateActionListToInvokesAndReturn(str smnm, [list[Action] acs, Action lastAction], list[Definition] defs, str paramsInvoke) {
 	str nm = lastAction.name;
 	list[ForkType] forkTypes = [*ft | fork(ft, name(nm), _, _) <- defs];
 	return 
 		"<for(action(ac) <- acs) {>
-			'<ac>(<paramsInvoke>);
+			'<smnm>_<ac>(<paramsInvoke>);
 		'<}>
 		'<if (immediate() in forkTypes) {>
 			'<getForkNameInvoke(lastAction)>(sm <paramsInvoke == "" ? "" : ", " + paramsInvoke>); // immediate fork
