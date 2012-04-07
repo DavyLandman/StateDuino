@@ -278,17 +278,18 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'	StatePointer nextState;
 	'	uint8_t sleepable;
 	'};
+	'#ifdef __cplusplus
+	'#define GETSMSTATE(pt) (reinterpret_cast\<struct State*\>(pt))
+	'#else
+	'#define GETSMSTATE(pt) ((struct State*)pt)
+	'#endif
 	'<for(fork(_, fname, _, _) <- sm.definitions) {>
 		'static void <getForkNameInvoke(fname)>(struct State* sm <paramsNotFirst>);
 	'<}>
 	'	
 	'void* SM_<sm.name.name>_initialize(SharedState state <paramsNotFirst>) {
 	'	<sm.name.name>_initialize(state <paramsInvokeNotFirst>);
-	'#ifdef __cplusplus
-	'	struct State* result = reinterpret_cast\<struct State*\>(malloc(sizeof(struct State)));
-	'#else
-	'	struct State* result = (struct State*)malloc(sizeof(struct State));
-	'#endif
+	'	struct State* result = GETSMSTATE(malloc(sizeof(struct State)));
 	'<if(nm := sm.startFork, fork([_*, sleepable(), _*], nm, _, _) <- sm.definitions) {>
 	'	result-\>sleepable = 1;
 	<} else {>
@@ -299,19 +300,11 @@ private void writeStateMachineImplementation(loc f, StateMachine sm) {
 	'}
 	'
 	'void SM_<sm.name.name>_takeStep(void* sm <paramsNotFirst>) {
-	'#ifdef __cplusplus
-	'	reinterpret_cast\<struct State*\>(sm)-\>nextState(reinterpret_cast\<struct State*\>(sm) <paramsInvokeNotFirst>);	
-	'#else
-	'	((struct State*)sm)-\>nextState(((struct State*)sm) <paramsInvokeNotFirst>);	
-	'#endif
+	'	GETSMSTATE(sm)-\>nextState(GETSMSTATE(sm) <paramsInvokeNotFirst>);
 	'}
 	'
 	'uint8_t SM_<sm.name.name>_isSleepableStep(const void* sm) {
-	'#ifdef __cplusplus
-	'	return reinterpret_cast\<struct State*\>(sm)-\>sleepable;
-	'#else
-	'	return ((struct State*)sm)-\>sleepable;
-	'#endif
+	'	return GETSMSTATE(sm)-\>sleepable;
 	'}
 	'<for(frk <- sm.definitions) {>
 		'<generateForkBody(sm.name.name, sm.definitions, frk, paramsNotFirst, paramsInvoke)>
