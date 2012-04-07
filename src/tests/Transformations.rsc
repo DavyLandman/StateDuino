@@ -159,3 +159,20 @@ public test bool checkCorrectlyRemovesSelfReferences() {
 		return false;
 	}
 }
+public test bool checkNoDuplicateForks() {
+	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> C1; } fork T2 { c2? =\> C1; } chain C1 { fork T3 { c3? =\> T1; } } ");
+	if (fork(_, name("T1"), _, [path(_, [action("T3")])]) <- result.definitions) {
+		if (fork(_, name("T2"), _, [path(_, [action("T3")])]) <- result.definitions) {
+			return true;
+		}
+		else {
+			println("Fork was reintroduced");
+			iprintln(result);
+			return false;	
+		}
+	}
+	else {
+		iprintln(result);
+		return false;
+	}
+}
