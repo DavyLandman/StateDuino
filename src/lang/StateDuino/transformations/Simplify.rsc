@@ -89,28 +89,33 @@ private StateMachine inlineChains(StateMachine sm) {
 
 private StateMachine unnestForks(StateMachine sm) {
 	list[Definition] newDefinitions = [];
+	set[str] usedNames = {nm | fork(_, name(nm), _, _) <- sm.definitions}
+		+ {nm | chain(name(nm), _) <- sm.definitions};
 	for (d <- sm.definitions) {
-		newDefinitions += unnestForks(d, ());	
+		<newDefs, newUsedNames> = unnestForks(d, (), usedNames);	
+		newDefinitions += newDefs;	
+		usedNames += newUsedNames;
 	}
 	return sm[definitions = newDefinitions];
 }
 
-private list[Definition] unnestForks(c:chain(_,acs), map[str, str] renames) {
-	<newAcs, newDefinitions> = unnestForks(acs, ());
-	return [c[actions=newAcs], *newDefinitions];
+private tuple[list[Definition], set[str]] unnestForks(c:chain(_,acs), map[str, str] renames, set[str] usedNames) {
+	<newAcs, newDefinitions, newUsedNames> = unnestForks(acs, (), usedNames);
+	return <[c[actions=newAcs], *newDefinitions], usedNames + newUsedNames>;
 }
-private list[Definition] unnestForks(f:fork(_,_,_, paths), map[str, str] renames) {
+private tuple[list[Definition], set[str]] unnestForks(f:fork(_,_,_, paths), map[str, str] renames, set[str] usedNames) {
 	list[ConditionalPath] newPaths = [];
 	list[Definition] newDefinitions = [];
 	for (p <- paths) {
-		<newAcs, newDefs> = unnestForks(p.actions, renames);
+		<newAcs, newDefs, newUsedNames> = unnestForks(p.actions, renames, usedNames);
+		usedNames += newUsedNames;
 		newPaths += [p[actions = newAcs]];
 		newDefinitions += newDefs;
 	}
-	return [f[paths = newPaths], *newDefinitions];
+	return <[f[paths = newPaths], *newDefinitions], usedNames>;
 }
 
-private tuple[list[Action], list[Definition]] unnestForks(list[Action] acs, map[str, str] renames) {
+private tuple[list[Action], list[Definition], set[str] ] unnestForks(list[Action] acs, map[str, str] renames, set[str] usedNames) {
 	list[Action] newActions = [];
 	list[Definition] newDefinitions = [];
 	for (a <- acs) {
@@ -125,13 +130,16 @@ private tuple[list[Action], list[Definition]] unnestForks(list[Action] acs, map[
 			}
 			case definition(d) : {
 				str oldName = d.name.name;
-				str newName = "<oldName>_<d.name@location.offset>";
+				str newName = (oldName in usedNames) ? "<oldName>_<d.name@location.offset>" : oldName;
+				usedNames += {newName};
 				newD = d[name = d.name[name=newName]];
-				newDefinitions += unnestForks(newD,	renames + (oldName : newName));
+				<newDefs, newUsedNames> = unnestForks(newD,	renames + (oldName : newName), usedNames);
+				newDefinitions += newDefs;
+				usedNames += newUsedNames;
 				newActions += [action(newName)[@location = d@location]];
 			}
 			default : throw "unexpected case?";
 		}
 	}	
-	return <newActions, newDefinitions>;
+	return <newActions, newDefinitions, usedNames>;
 }
