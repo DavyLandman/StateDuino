@@ -62,50 +62,29 @@ private default Definition removeSelfReferences(Definition d) {
 	throw "Not supported definition";
 }
 
-private StateMachine inlineChains(StateMachine complex) {
-	map[str, list[Action]] chainActions = ( m : p | chain(name(m), p) <- complex.definitions);
-	solve(chainActions) {
-		for (cn <- chainActions) {
-			list[Action] acs = chainActions[cn];
-			if (chainActions[last(acs).name]?) {
-				// nested chain call;
-				chainActions[cn] = prefix(acs) + chainActions[last(acs).name];
-			}
-		}
-	}
-	list[Action] replaceActions(list[Action] acts, set[str] nestedForkNames) {
-		list[Action] result = [];
-		for (a <- acts) {
-			switch(a) {
-				case action(nm): 
-					if (!(nm in nestedForkNames) && chainActions[nm]?) {
-						result += chainActions[nm];	
-					}	
-					else {
-						result += [a];	
-					}
-				case d:definition(f) : {
-					result += [d[definition = replaceActions(f, nestedForkNames + (f.name? ? {f.name.name} : {}))]];	
-				}
+private StateMachine inlineChains(StateMachine sm) {
+	map[str, list[Action]] chainActions = ( m : p | chain(name(m), p) <- sm.definitions);
+	list[Definition] newDefinitions = [];
+	
+	list[Action] inlineChains(list[Action] acs) {
+		result = acs;
+		solve(result) {
+			if ([list[Action] prev, Action tl] := result) {
+				result = prev + (chainActions[tl.name]? [tl]);
 			}
 		}
 		return result;
-	};
-	
-	Definition replaceActions(Definition def, set[str] nestedForkNames) {
-		list[ConditionalPath] newPaths = [];
-		for (p <- def.paths) {
-			newPaths += [p[actions = replaceActions(p.actions, nestedForkNames)]];
-		}
-		newPreActions = replaceActions(def.preActions, nestedForkNames);
-		return def[paths= newPaths][preActions = newPreActions];
-	};	
-	// check forks inside chains
-	for (cn <- chainActions) {
-		chainActions[cn] = replaceActions(chainActions[cn], {cn});	
 	}
-	list[Definition] newDefinitions = [replaceActions(f, {}) | f:fork(_,_,_,_) <- complex.definitions];
-	return complex[definitions = newDefinitions];
+	
+	for (f:fork(_,_,pre,paths) <- sm.definitions) {
+		newPre = inlineChains(pre);
+		newPaths = [];
+		for (p <- paths) {
+			newPaths += [p[actions = inlineChains(p.actions)]];				
+		}
+		newDefinitions += [f[preActions = newPre][paths=newPaths]];
+	}
+	return sm[definitions = newDefinitions];
 }
 
 private StateMachine unnestForks(StateMachine sm) {
