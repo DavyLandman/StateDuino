@@ -89,57 +89,49 @@ private StateMachine inlineChains(StateMachine sm) {
 
 private StateMachine unnestForks(StateMachine sm) {
 	list[Definition] newDefinitions = [];
+	
 	set[str] usedNames = {nm | fork(_, name(nm), _, _) <- sm.definitions}
 		+ {nm | chain(name(nm), _) <- sm.definitions};
+
+	Definition unnestForks(c:chain(_,acs), map[str, str] renames) {
+		return c[actions = unnestForks(acs, ())];
+	}
+	
+	Definition unnestForks(f:fork(_,_,_, paths), map[str, str] renames) {
+		list[ConditionalPath] newPaths = [];
+		for (p <- paths) {
+			newPaths += [p[actions = unnestForks(p.actions, renames)]];
+		}
+		return f[paths = newPaths];
+	}
+	
+	list[Action] unnestForks(list[Action] acs, map[str, str] renames) {
+		list[Action] newActions = [];
+		for (a <- acs) {
+			switch(a) {
+				case action(nm) : {
+					if (renames[nm]?) {
+						newActions += [a[name=renames[nm]]];
+					}
+					else {
+						newActions += [a];	
+					}
+				}
+				case definition(d) : {
+					str oldName = d.name.name;
+					str newName = (oldName in usedNames) ? "<oldName>_<d.name@location.offset>" : oldName;
+					usedNames += {newName};
+					newDefinitions += [unnestForks(d[name = d.name[name=newName]], renames + (oldName : newName))];
+					newActions += [action(newName)[@location = d@location]];
+				}
+				default : throw "unexpected case?";
+			}
+		}	
+		return newActions;
+	}
+
 	for (d <- sm.definitions) {
-		<newDefs, newUsedNames> = unnestForks(d, (), usedNames);	
-		newDefinitions += newDefs;	
-		usedNames += newUsedNames;
+		newDefinitions += [unnestForks(d, ())];	
 	}
 	return sm[definitions = newDefinitions];
-}
-
-private tuple[list[Definition], set[str]] unnestForks(c:chain(_,acs), map[str, str] renames, set[str] usedNames) {
-	<newAcs, newDefinitions, newUsedNames> = unnestForks(acs, (), usedNames);
-	return <[c[actions=newAcs], *newDefinitions], usedNames + newUsedNames>;
-}
-private tuple[list[Definition], set[str]] unnestForks(f:fork(_,_,_, paths), map[str, str] renames, set[str] usedNames) {
-	list[ConditionalPath] newPaths = [];
-	list[Definition] newDefinitions = [];
-	for (p <- paths) {
-		<newAcs, newDefs, newUsedNames> = unnestForks(p.actions, renames, usedNames);
-		usedNames += newUsedNames;
-		newPaths += [p[actions = newAcs]];
-		newDefinitions += newDefs;
-	}
-	return <[f[paths = newPaths], *newDefinitions], usedNames>;
-}
-
-private tuple[list[Action], list[Definition], set[str] ] unnestForks(list[Action] acs, map[str, str] renames, set[str] usedNames) {
-	list[Action] newActions = [];
-	list[Definition] newDefinitions = [];
-	for (a <- acs) {
-		switch(a) {
-			case action(nm) : {
-				if (renames[nm]?) {
-					newActions += [a[name=renames[nm]]];
-				}
-				else {
-					newActions += [a];	
-				}
-			}
-			case definition(d) : {
-				str oldName = d.name.name;
-				str newName = (oldName in usedNames) ? "<oldName>_<d.name@location.offset>" : oldName;
-				usedNames += {newName};
-				newD = d[name = d.name[name=newName]];
-				<newDefs, newUsedNames> = unnestForks(newD,	renames + (oldName : newName), usedNames);
-				newDefinitions += newDefs;
-				usedNames += newUsedNames;
-				newActions += [action(newName)[@location = d@location]];
-			}
-			default : throw "unexpected case?";
-		}
-	}	
-	return <newActions, newDefinitions, usedNames>;
 }
