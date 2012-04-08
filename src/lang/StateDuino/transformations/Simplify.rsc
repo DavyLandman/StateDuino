@@ -11,8 +11,8 @@ public StateMachine simplify(StateMachine complex) {
 	StateMachine result = complex;
 	result = removeUnnamedForks(result);
 	result = removeSelfReferences(result);
-	result = inlineChains(result);
 	result = unnestForks(result);
+	result = inlineChains(result);
 	return result;
 }
 private StateMachine removeUnnamedForks(StateMachine sm) {
@@ -62,95 +62,76 @@ private default Definition removeSelfReferences(Definition d) {
 	throw "Not supported definition";
 }
 
-private StateMachine inlineChains(StateMachine complex) {
-	map[str, list[Action]] chainActions = ( m : p | chain(name(m), p) <- complex.definitions);
-	solve(chainActions) {
-		for (cn <- chainActions) {
-			list[Action] acs = chainActions[cn];
-			if (chainActions[last(acs).name]?) {
-				// nested chain call;
-				chainActions[cn] = prefix(acs) + chainActions[last(acs).name];
-			}
-		}
-	}
-	list[Action] replaceActions(list[Action] acts, set[str] nestedForkNames) {
-		list[Action] result = [];
-		for (a <- acts) {
-			switch(a) {
-				case action(nm): 
-					if (!(nm in nestedForkNames) && chainActions[nm]?) {
-						result += chainActions[nm];	
-					}	
-					else {
-						result += [a];	
-					}
-				case d:definition(f) : {
-					result += [d[definition = replaceActions(f, nestedForkNames + (f.name? ? {f.name.name} : {}))]];	
-				}
+private StateMachine inlineChains(StateMachine sm) {
+	map[str, list[Action]] chainActions = ( m : p | chain(name(m), p) <- sm.definitions);
+	list[Definition] newDefinitions = [];
+	
+	list[Action] inlineChains(list[Action] acs) {
+		result = acs;
+		solve(result) {
+			if ([list[Action] prev, Action tl] := result) {
+				result = prev + (chainActions[tl.name]? [tl]);
 			}
 		}
 		return result;
-	};
-	
-	Definition replaceActions(Definition def, set[str] nestedForkNames) {
-		list[ConditionalPath] newPaths = [];
-		for (p <- def.paths) {
-			newPaths += [p[actions = replaceActions(p.actions, nestedForkNames)]];
-		}
-		newPreActions = replaceActions(def.preActions, nestedForkNames);
-		return def[paths= newPaths][preActions = newPreActions];
-	};	
-	// check forks inside chains
-	for (cn <- chainActions) {
-		chainActions[cn] = replaceActions(chainActions[cn], {cn});	
 	}
-	list[Definition] newDefinitions = [replaceActions(f, {}) | f:fork(_,_,_,_) <- complex.definitions];
-	return complex[definitions = newDefinitions];
+	
+	for (f:fork(_,_,pre,paths) <- sm.definitions) {
+		newPre = inlineChains(pre);
+		newPaths = [];
+		for (p <- paths) {
+			newPaths += [p[actions = inlineChains(p.actions)]];				
+		}
+		newDefinitions += [f[preActions = newPre][paths=newPaths]];
+	}
+	return sm[definitions = newDefinitions];
 }
 
-// assumes no chains, no definition loops, no nameless forks
 private StateMachine unnestForks(StateMachine sm) {
-	map[str, str] namesSeen = (nm:nm | fork(_, name(nm), _, _) <- sm.definitions);
-	map[str, Definition] globalForks = (nm:f | f:fork(_, name(nm), _, _) <- sm.definitions);
 	list[Definition] newDefinitions = [];
-	tuple[Definition, map[str, str]] renameAndUnnest(Definition f, map[str, str] alreadyRenamed) {
+	
+	set[str] usedNames = {nm | fork(_, name(nm), _, _) <- sm.definitions}
+		+ {nm | chain(name(nm), _) <- sm.definitions};
+
+	Definition unnestForks(c:chain(_,acs), map[str, str] renames) {
+		return c[actions = unnestForks(acs, ())];
+	}
+	
+	Definition unnestForks(f:fork(_,_,_, paths), map[str, str] renames) {
 		list[ConditionalPath] newPaths = [];
-		for (p <- f.paths) {
-			if (definition(fn:fork(_, name(nm), _, _)) := last(p.actions)) {
-				str newName = nm;
-				while (alreadyRenamed[newName]? && fn != globalForks[newName]) {
-					newName = "_" + newName;
-				}
-				<fn, newNames> = renameAndUnnest(fn, alreadyRenamed + (nm : newName));		
-				alreadyRenamed += newNames;
-				alreadyRenamed[newName] = newName;
-				newDefinitions += [fn[name = fn.name[name = newName]]];
-				globalForks[newName] = fn[name = fn.name[name = newName]];
-				newPaths += [p[actions = prefix(p.actions) + [action(newName)[@location = f@location]]]];
-			} 
-			else {
-				if (alreadyRenamed[last(p.actions).name]?) {
-					Action newLast = last(p.actions)[name = alreadyRenamed[last(p.actions).name]];
-					p = p[actions = prefix(p.actions) + [newLast]];
-				}
-				newPaths += [p];	
-			}
+		for (p <- paths) {
+			newPaths += [p[actions = unnestForks(p.actions, renames)]];
 		}
-		return <f[paths = newPaths], alreadyRenamed>;
+		return f[paths = newPaths];
 	}
-	list[Definition] rewroteDefinitions = [];
-	for (f <- sm.definitions) {
-		<f, newNames> = renameAndUnnest(f, namesSeen);		
-		rewroteDefinitions += [f];
-		namesSeen += newNames;	
-	}
-	set[Definition] alreadyDefined = {};
-	list[Definition] resultDefinitions =  []; 
-	for (d <- rewroteDefinitions + newDefinitions) {
-		if (!(d in alreadyDefined)) {
-			resultDefinitions += [d];
-			alreadyDefined += {d};
+	
+	list[Action] unnestForks(list[Action] acs, map[str, str] renames) {
+		list[Action] newActions = [];
+		for (a <- acs) {
+			switch(a) {
+				case action(nm) : {
+					if (renames[nm]?) {
+						newActions += [a[name=renames[nm]]];
+					}
+					else {
+						newActions += [a];	
+					}
+				}
+				case definition(d) : {
+					str oldName = d.name.name;
+					str newName = (oldName in usedNames) ? "<oldName>_<d.name@location.offset>" : oldName;
+					usedNames += {newName};
+					newDefinitions += [unnestForks(d[name = d.name[name=newName]], renames + (oldName : newName))];
+					newActions += [action(newName)[@location = d@location]];
+				}
+				default : throw "unexpected case?";
+			}
 		}	
+		return newActions;
 	}
-	return sm[definitions = resultDefinitions];
+
+	for (d <- sm.definitions) {
+		newDefinitions += [unnestForks(d, ())];	
+	}
+	return sm[definitions = newDefinitions];
 }

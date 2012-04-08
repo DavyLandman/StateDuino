@@ -1,6 +1,7 @@
 module tests::Transformations
 
 import IO;
+import String;
 import lang::StateDuino::ast::Main;
 import lang::StateDuino::ast::Load;
 import lang::StateDuino::transformations::Simplify;
@@ -20,7 +21,7 @@ public test bool checkGlobalActionsAreNested() {
 }
 public test bool checkGlobalActionsAreNestedRespectingScope() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> A1; c2? =\> fork A1 { c2? =\> A1; }  } chain A1 { A2; T1; }");
-	if (/fork(_, name("A1"), [], [path(_, [action("A1")])])  := result) {
+	if (/fork(_, name(a1Name), [], [path(_, [action(a1Name)])])  := result, startsWith(a1Name, "A1")) {
 		return true;
 	}
 	else {
@@ -30,7 +31,7 @@ public test bool checkGlobalActionsAreNestedRespectingScope() {
 }
 public test bool checkChainsAreInsertedIntoNestedForks() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> A1; c2? =\> fork F1 { c2? =\> A1; }  } chain A1 { A2; T1; }");
-	if (/fork(_, name("F1"), [], [path(_, [action("A2"), action("T1")])])  := result) {
+	if (/fork(_, name(f1Name), [], [path(_, [action("A2"), action("T1")])])  := result, startsWith(f1Name, "F1")) {
 		return true;
 	}
 	else {
@@ -81,7 +82,7 @@ public test bool checkChainsAreNestedInPreActions() {
 }
 public test bool checkGlobalActionsAreNestedWithFork() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> A1; } chain A1 { A2; fork T2 { c1? =\> T1; } }");
-	if (/fork(_, name("T1"), _, [path(_, [action("A2"), action("T2")])])  := result) {
+	if (/fork(_, name("T1"), _, [path(_, [action("A2"), action(t2Name)])])  := result, startsWith(t2Name, "T2")) {
 		return true;
 	}
 	else {
@@ -111,7 +112,7 @@ public test bool checkForkUnnestingWorks2() {
 }
 public test bool checkForkUnnestingWorks3() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> fork T1 { c2? =\> fork T2 { c1? =\> A3; T1; } } } ");
-	if (fork(_, name(nm), _, [path(_, [action("T2")])]) <- result.definitions) {
+	if (/name(t2Name) := result, startsWith(t2Name, "T2"), fork(_, name(nm), _, [path(_, [action(t2Name)])]) <- result.definitions) {
 		if (fork(_, _, _, [path(_, [action("A3"), action(nm)])]) <- result.definitions) {
 			return true;
 		}
@@ -140,7 +141,7 @@ public test bool checkForkUnnestingWorksWithRenewDefinitions() {
 
 public test bool checkForkUnnestingWorksWhenInsideChains() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> C1; } chain C1 { A1; fork T2 { c2? =\> A2; A3; C2; } } chain C2 { fork T3 { c4? =\> A4; A4; T1; } }  ");
-	if (fork(_, name("T2"), _, [path(_, [action("A2"), action("A3"), action("T3")])]) <- result.definitions) {
+	if (/fork(_, name(t2Name), _, [path(_, [action("A2"), action("A3"), action(t3Name)])]) := result, startsWith(t2Name, "T2"), startsWith(t3Name, "T3")) {
 		return true;
 	}
 	else {
@@ -161,8 +162,8 @@ public test bool checkCorrectlyRemovesSelfReferences() {
 }
 public test bool checkNoDuplicateForks() {
 	StateMachine result = getSimplified("StateMachine Test start=T1 fork T1 { c1? =\> C1; } fork T2 { c2? =\> C1; } chain C1 { fork T3 { c3? =\> T1; } } ");
-	if (fork(_, name("T1"), _, [path(_, [action("T3")])]) <- result.definitions) {
-		if (fork(_, name("T2"), _, [path(_, [action("T3")])]) <- result.definitions) {
+	if (/fork(_, name("T1"), _, [path(_, [action(t3Name)])]) := result, startsWith(t3Name, "T3")) {
+		if (fork(_, name("T2"), _, [path(_, [action(t3Name)])]) <- result.definitions) {
 			return true;
 		}
 		else {
