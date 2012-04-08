@@ -11,8 +11,8 @@ public StateMachine simplify(StateMachine complex) {
 	StateMachine result = complex;
 	result = removeUnnamedForks(result);
 	result = removeSelfReferences(result);
-	result = inlineChains(result);
 	result = unnestForks(result);
+	result = inlineChains(result);
 	return result;
 }
 private StateMachine removeUnnamedForks(StateMachine sm) {
@@ -108,8 +108,58 @@ private StateMachine inlineChains(StateMachine complex) {
 	return complex[definitions = newDefinitions];
 }
 
-// assumes no chains, no definition loops, no nameless forks
 private StateMachine unnestForks(StateMachine sm) {
+	list[Definition] newDefinitions = [];
+	for (d <- sm.definitions) {
+		newDefinitions += unnestForks(d, ());	
+	}
+	return sm[definitions = newDefinitions];
+}
+
+private list[Definition] unnestForks(c:chain(_,acs), map[str, str] renames) {
+	<newAcs, newDefinitions> = unnestForks(acs, ());
+	return [c[actions=newAcs], *newDefinitions];
+}
+private list[Definition] unnestForks(f:fork(_,_,_, paths), map[str, str] renames) {
+	list[ConditionalPath] newPaths = [];
+	list[Definition] newDefinitions = [];
+	for (p <- paths) {
+		<newAcs, newDefs> = unnestForks(p.actions, renames);
+		newPaths += [p[actions = newAcs]];
+		newDefinitions += newDefs;
+	}
+	return [f[paths = newPaths], *newDefinitions];
+}
+
+private tuple[list[Action], list[Definition]] unnestForks(list[Action] acs, map[str, str] renames) {
+	list[Action] newActions = [];
+	list[Definition] newDefinitions = [];
+	for (a <- acs) {
+		switch(a) {
+			case action(nm) : {
+				if (renames[nm]?) {
+					newActions += [a[name=renames[nm]]];
+				}
+				else {
+					newActions += [a];	
+				}
+			}
+			case definition(d) : {
+				str oldName = d.name.name;
+				str newName = "<oldName>_<d.name@location.offset>";
+				newD = d[name = d.name[name=newName]];
+				newDefinitions += unnestForks(newD,	renames + (oldName : newName));
+				newActions += [action(newName)[@location = d@location]];
+			}
+			default : throw "unexpected case?";
+		}
+	}	
+	return <newActions, newDefinitions>;
+}
+
+
+// assumes no chains, no definition loops, no nameless forks
+private StateMachine unnestForksOld(StateMachine sm) {
 	map[str, str] namesSeen = (nm:nm | fork(_, name(nm), _, _) <- sm.definitions);
 	map[str, Definition] globalForks = (nm:f | f:fork(_, name(nm), _, _) <- sm.definitions);
 	list[Definition] newDefinitions = [];
