@@ -64,18 +64,18 @@ private default Definition removeSelfReferences(Definition d) {
 
 private StateMachine inlineChains(StateMachine sm) {
 	map[str, list[Action]] chainActions = ( m : p | chain(name(m), p) <- sm.definitions);
-	list[Definition] newDefinitions = [];
 	
 	list[Action] inlineChains(list[Action] acs) {
 		result = acs;
 		solve(result) {
-			if ([list[Action] prev, Action tl] := result) {
-				result = prev + (chainActions[tl.name]? [tl]);
+			if ([list[Action] prev, Action tl] := result, chainActions[tl.name]?) {
+				result = prev + chainActions[tl.name];
 			}
 		}
 		return result;
 	}
 	
+	list[Definition] newDefinitions = [];
 	for (f:fork(_,_,pre,paths) <- sm.definitions) {
 		newPre = inlineChains(pre);
 		newPaths = [];
