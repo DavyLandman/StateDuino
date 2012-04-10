@@ -1,0 +1,24 @@
+StateMachine Ethernet
+start = WaitForCommunicationTimeOutPassed
+
+sleepable fork WaitForCommunicationTimeOutPassed {
+	ShouldStartCommunication? =>
+		WakeUpEthernet;
+		InitializeTemperatureSending;
+		WaitForTemperatureSend;
+}
+
+fork WaitForTemperatureSend {
+	RecvAndSendPackets; // always perform this
+	WasTemperatureSend? =>
+		PowerDownEthernet;
+	HasTemperatureSendingTimeoutPassed? => 
+		MarkTimeout;
+		PowerDownEthernet;
+}
+	
+chain PowerDownEthernet {
+	DoPowerDownEthernet;
+	InitializeNextCommunicationRound;
+	WaitForCommunicationTimeOutPassed;
+}		

@@ -1,0 +1,4 @@
+Coordinator TemperatureLog
+
+Temperature();
+Ethernet();
