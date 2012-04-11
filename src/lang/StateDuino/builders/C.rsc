@@ -37,7 +37,7 @@ private void writeStateMachine(loc directory, StateMachine sm) {
 	writeStateMachineHeader(hSMFile, sm);
 	writeStateMachineImplementation(cSMFile, sm);
 	writeCallbackHeader(hFile, sm);
-	if (!exists(cFile)) {
+	if (!exists(cFile) && !exists(cFile[extension="cpp"])) {
 		writeDefaultCallback(cFile, sm);	
 	}
 }
