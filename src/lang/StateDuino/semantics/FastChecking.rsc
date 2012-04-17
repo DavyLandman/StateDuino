@@ -10,7 +10,7 @@ import IO;
 import lang::StateDuino::ast::Main;
 import lang::StateDuino::semantics::Concepts;
 
-private set[Message] fastCheck(StateMachine sm) {
+public set[Message] fastCheck(StateMachine sm) {
 	set[Message] result ={};
 	visit(sm) {
 		case p:param(str name, _) : 

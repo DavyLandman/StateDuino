@@ -10,7 +10,7 @@ import IO;
 import lang::StateDuino::ast::Main;
 import lang::StateDuino::semantics::Concepts;
 
-private set[Message] fullCheck(StateMachine sm) {
+public set[Message] fullCheck(StateMachine sm) {
 	set[Message] result = {};
 	sm = unNest(sm);
 	result += checkForInvalidActionSequences(sm);

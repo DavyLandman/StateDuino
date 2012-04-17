@@ -13,9 +13,9 @@ import lang::StateDuino::transformations::Simplify;
 
 //public set[Message] structuralCheck
 
-extend lang::StateDuino::semantics::FastChecking;
-extend lang::StateDuino::semantics::StructureChecking;
-extend lang::StateDuino::semantics::FullChecking;
+import lang::StateDuino::semantics::FastChecking;
+import lang::StateDuino::semantics::StructureChecking;
+import lang::StateDuino::semantics::FullChecking;
 
 public set[Message] performFastCheck(StateMachine sm) = fastCheck(sm);
 

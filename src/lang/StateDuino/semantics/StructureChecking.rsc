@@ -11,7 +11,7 @@ import lang::StateDuino::ast::Main;
 import lang::StateDuino::semantics::Concepts;
 
 
-private set[Message] structureCheck(StateMachine sm) {
+public set[Message] structureCheck(StateMachine sm) {
 	set[Message] result = checkForAlreadyDefinedNames(sm);
 	result += checkForDefineLoops(sm);
 	return result;
