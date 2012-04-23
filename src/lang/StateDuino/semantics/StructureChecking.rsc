@@ -41,15 +41,13 @@ private set[Message] checkForDefineLoops(StateMachine sm) {
 	
 	set[str] invalidChains = {};
 	solve(invalidChains) {
-		for (c:chain(n:name(str st),_ ) <- sm.definitions) {
-			if (<st, st> in chainPaths) {
-				invalidChains += {st};
-				result += error("<st> has a definition loop.", n@location);
-			}
-			else if ((chainPaths[st] & invalidChains) > {}) {
-				invalidChains += {st};
-				result += error("<st> calls a chain which has a definition loop.", n@location);
-			}
+		for (chain(n:name(str st),_ ) <- sm.definitions, <st, st> in chainPaths) {
+			invalidChains += {st};
+			result += error("<st> has a definition loop.", n@location);
+		}
+		for (chain(n:name(str st),_ ) <- sm.definitions, (chainPaths[st] & invalidChains) > {}) {
+			invalidChains += {st};
+			result += error("<st> calls a chain which has a definition loop.", n@location);
 		}	
 	}
 	return result;
