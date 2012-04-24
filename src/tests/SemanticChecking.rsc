@@ -104,9 +104,6 @@ public test bool testEmptyBody4() {
 public test bool testInvalidChainWithForkReference() {
 	return verifyInvalidTransitionChain("StateMachine Test start = T1 fork T1 { c1? =\> T3; T4; } fork T3 { default =\> T1; }", "T3");
 }
-public test bool testInvalidPreChainWithForkReference() {
-	return verifyInvalidTransitionChain("StateMachine Test start = T1 fork T1 { T1; c1? =\> T1; } ", "T1");
-}
 
 private bool verifyDoesntEndInFork(str inp, str wrongEnd) {
 	return verifyContainsErrorMessage(inp,
@@ -114,6 +111,11 @@ private bool verifyDoesntEndInFork(str inp, str wrongEnd) {
 		) || verifyContainsErrorMessage(inp,
 		"<wrongEnd> has a definition loop."
 		) ;
+}
+
+public test bool alwaysExecutingActionCannotEndInAFork() {
+	return verifyContainsErrorMessage("StateMachine Test start = T1 fork T1 { A1; T1; c1? =\> A2; T1; }",
+		"Always executing actions of T1 cannot end in a fork (T1)");
 }
 
 public test bool testEveryThingEndsWithAFork() {
