@@ -1,6 +1,6 @@
 module tests::TestParsingProblems
 
-import FileSystem;
+import util::FileSystem;
 import lang::StateDuino::cst::Parse;
 import IO;
 import Set;

@@ -6,7 +6,7 @@ import lang::StateDuino::semantics::Checker;
 import Message;
 import Set;
 import IO;
-import FileSystem;
+import util::FileSystem;
 
 private set[Message] runFastCheckOn(str input) {
 	return performFastCheck(getStateMachine(input));

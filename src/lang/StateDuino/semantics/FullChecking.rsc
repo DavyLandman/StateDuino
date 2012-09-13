@@ -5,7 +5,7 @@ import List;
 import Set;
 import Message;
 import Relation;
-import Graph;
+import analysis::graphs::Graph;
 import IO;
 import lang::StateDuino::ast::Main;
 import lang::StateDuino::semantics::Concepts;

@@ -1,6 +1,6 @@
 module tests::TestImplodes
 
-import FileSystem;
+import util::FileSystem;
 import lang::StateDuino::ast::Load;
 import lang::StateDuino::ast::Main;
 import IO;
