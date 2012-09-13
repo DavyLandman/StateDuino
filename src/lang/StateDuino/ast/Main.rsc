@@ -5,8 +5,8 @@ data StateMachine = stateMachine(StateMachineIdentifier name, Name startFork, li
 data Name = name(str name);
 
 data StateMachineIdentifier 
-	= normal(str name)
-	| parameterized(str name, list[Parameter] params)
+	= normal(Name name)
+	| parameterized(Name name, list[Parameter] params)
 	;
 data ForkType = sleepable() | immediate();
 
@@ -19,7 +19,7 @@ data Definition
 	;
 	
 data Action
-	= action(str name)
+	= action(Name name)
 	| definition(Definition definition)
 	;
 	
@@ -36,9 +36,9 @@ data Expression
 	;
 	
 	
-data Coordinator = coordinator(str name, list[Invoke] invokes);
+data Coordinator = coordinator(Name name, list[Invoke] invokes);
 
-data Invoke = invoke(str name, list[int] params);
+data Invoke = invoke(Name name, list[int] params);
 	
 anno loc StateMachine@location;
 anno loc StateMachineIdentifier@location;
