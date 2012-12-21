@@ -68,8 +68,8 @@ private StateMachine inlineChains(StateMachine sm) {
 	list[Action] inlineChains(list[Action] acs) {
 		result = acs;
 		solve(result) {
-			if ([list[Action] prev, Action tl] := result, chainActions[tl.name]?) {
-				result = prev + chainActions[tl.name];
+			if ([list[Action] prev, Action tl] := result, chainActions[tl.name.name]?) {
+				result = prev + chainActions[tl.name.name];
 			}
 		}
 		return result;
@@ -107,9 +107,9 @@ private StateMachine unnestForks(StateMachine sm) {
 	
 	list[Action] unnestForks([list[Action] acs, Action lastAction], map[str, str] renames) {
 		switch(lastAction) {
-			case action(nm) : {
+			case action(name(nm)) : {
 				if (renames[nm]?) {
-					lastAction = lastAction[name=renames[nm]];
+					lastAction = lastAction[name=lastAction.name[name =renames[nm]]];
 				}
 			}
 			case definition(d) : {
@@ -117,7 +117,7 @@ private StateMachine unnestForks(StateMachine sm) {
 				str newName = (oldName in usedNames) ? "<oldName>_<d.name@location.offset>" : oldName;
 				usedNames += {newName};
 				newDefinitions += [unnestForks(d[name = d.name[name=newName]], renames + (oldName : newName))];
-				lastAction = action(newName)[@location = d@location];
+				lastAction = action(d.name[name=newName])[@location = d@location];
 			}
 			default : throw "unexpected case?";
 		}

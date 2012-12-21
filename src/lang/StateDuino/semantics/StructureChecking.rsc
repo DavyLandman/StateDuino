@@ -31,13 +31,13 @@ private set[Message] checkForAlreadyDefinedNames(StateMachine sm) {
 	return result;
 }
 
-private str getName(action(nm)) = nm;
+private str getName(action(name(nm))) = nm;
 private str getName(definition(d)) = "_fork";
 		
 
 private set[Message] checkForDefineLoops(StateMachine sm) {
 	set[Message] result = {};
-	rel[str, str] chainPaths = { *{<st.name, ac> | /action(str ac) <- acs} | chain(st, list[Action] acs) <- sm.definitions};
+	rel[str, str] chainPaths = { *{<st.name, ac> | /action(name(str ac)) <- acs} | chain(st, list[Action] acs) <- sm.definitions};
 	chainPaths = chainPaths+;
 	
 	set[str] invalidChains = {};
@@ -55,19 +55,19 @@ private set[Message] checkForDefineLoops(StateMachine sm) {
 }
 
 private str getName(Definition def) = (def.name?) ? def.name.name : "nameless";
-private str getName(action(nm)) = nm;
+private str getName(action(name(nm))) = nm;
 private str getName(definition(def)) = getName(def);
 
 private set[Message] immediateActionsNeverFork(StateMachine sm) {
 	set[str] forksKnown = {nm | fork(_, name(nm), _, _) <- sm.definitions};
 	// chains ending in forks also count (either defined inline or referenced)
-	forksKnown += { c | chain(name(c), [_*, lastAction]) <- sm.definitions, definition(_) := lastAction || (lastAction.name? && lastAction.name in forksKnown) };
+	forksKnown += { c | chain(name(c), [_*, lastAction]) <- sm.definitions, definition(_) := lastAction || (lastAction.name? && lastAction.name.name in forksKnown) };
 	forksKnown += { "self" };
 	
 	set[Message] checkPreActions(Definition def, set[str] knownForks) {
 		set[Message] result = {};
 		if ([_*, lastAction] := def.preActions) {
-			if (action(an) := lastAction, an in knownForks) {
+			if (action(name(an)) := lastAction, an in knownForks) {
 				result += preActionsMessage(def, lastAction); 	
 			}	
 			else if (definition(d) := lastAction) {

@@ -23,7 +23,7 @@ private set[Message] checkForInvalidActionSequences(StateMachine sm) {
 	set[Message] result ={};
 	visit(sm) {
 		case [list[Action] prefixChain, _]:
-			for (a:action(nm) <- prefixChain, nm in definedForks) {
+			for (a:action(name(nm)) <- prefixChain, nm in definedForks) {
 				result += {error("There should be no more actions after a call to a fork (<fixName(nm)>).", a@location)};
 			}
 	}
@@ -37,7 +37,7 @@ private set[Message] checkForInvalidEnd(StateMachine sm) {
 		case Definition d => (d.preActions?) ? d[preActions = []] : d
 	}	
 	visit(removedPreActions) {
-		case [_*,a:action(nm)] : endRequirements += {<nm, a@location>};	
+		case [_*,a:action(name(nm))] : endRequirements += {<nm, a@location>};	
 		case name(str nm) : definedStarts += {nm};
 	}
 	set[str] missingDefines = domain(endRequirements) - definedStarts;
