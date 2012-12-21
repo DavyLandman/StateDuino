@@ -11,9 +11,11 @@ syntax StateMachineIdentifier
 	| parameterized: Name name "(" {Parameter ","}+ params")"
 	;
 	
-syntax Parameter = param: TypeName type ParamName name;
+syntax Parameter = param: Name type Name name;
+/*
 lexical ParamName = @category="Variable" Name;
 lexical TypeName = @category="Type" Name;
+*/
 
 lexical Name = name: ([a-zA-Z] [a-zA-Z0-9_+\-]* !>> [a-zA-Z0-9_+\-]);
 

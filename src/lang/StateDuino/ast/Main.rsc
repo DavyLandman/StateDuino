@@ -8,9 +8,10 @@ data StateMachineIdentifier
 	= normal(Name name)
 	| parameterized(Name name, list[Parameter] params)
 	;
+
 data ForkType = sleepable() | immediate();
 
-data Parameter = param(str \type, str name);
+data Parameter = param(Name \type, Name name);
 
 data Definition 
 	= fork(list[ForkType] forkType, Name name, list[Action] preActions, list[ConditionalPath] paths)
