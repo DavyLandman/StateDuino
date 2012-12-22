@@ -107,10 +107,12 @@ public test bool testInvalidChainWithForkReference() {
 
 private bool verifyDoesntEndInFork(str inp, str wrongEnd) {
 	return verifyContainsErrorMessage(inp,
-		"<wrongEnd> does not end in a fork."
-		) || verifyContainsErrorMessage(inp,
-		"<wrongEnd> has a definition loop."
-		) ;
+		"<wrongEnd> does not end in a fork.") 
+		|| verifyContainsErrorMessage(inp,
+		"<wrongEnd> has a definition loop.") 
+		|| verifyContainsErrorMessage(inp,
+		"<wrongEnd> is undefined") 
+	;
 }
 
 public test bool alwaysExecutingActionCannotEndInAFork() {
@@ -132,6 +134,9 @@ public test bool testEveryThingEndsWithAFork4() {
 }
 public test bool testEveryThingEndsWithAFork5() {
 	return verifyDoesntEndInFork("StateMachine Test start = T1 fork T1 { c1? =\> immediate fork T2 { c2? =\> C2; } } chain C2 { A1; }", "A1");
+}
+public test bool testEveryThingEndsWithAFork6() {
+	return verifyContainsErrorMessage("StateMachine Test start = T1 fork T1 { c1? =\> immediate fork { c2? =\> self; } }", "_nameless0 ends with an immediate fork.");
 }
 
 // these tests need some formal boolean checking stuff!
