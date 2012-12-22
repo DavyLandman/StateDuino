@@ -31,14 +31,14 @@ private set[Message] checkForInvalidActionSequences(StateMachine sm) {
 }
 
 private set[Message] checkForInvalidEnd(StateMachine sm) {
-	set[str] definedStarts = {};
+	set[str] definedStarts = {"self"};
 	rel[str end, loc req] endRequirements = {<sm.startFork.name, sm.startFork@location>};
 	removedPreActions = visit (sm.definitions) {
 		case Definition d => (d.preActions?) ? d[preActions = []] : d
 	}	
 	visit(removedPreActions) {
 		case [_*,a:action(name(nm))] : endRequirements += {<nm, a@location>};	
-		case name(str nm) : definedStarts += {nm};
+		case Definition d: if (d.name?) definedStarts += {d.name.name};
 	}
 	set[str] missingDefines = domain(endRequirements) - definedStarts;
 	return {*{error("<fixName(md)> is undefined", l) | l <- endRequirements[md]} | md <- missingDefines};
