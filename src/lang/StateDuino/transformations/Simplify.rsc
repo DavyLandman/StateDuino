@@ -49,7 +49,7 @@ private list[Action] removeSelfReferences(list[Action] acs, str nm) {
 	list[Action] newActions = [];
 	for (a <- acs) {
 		switch(a) {
-			case action("self") : newActions += [a[name=nm]];
+			case action(name("self")) : newActions += [a[name=a.name[name=nm]]];
 			case action(_) : newActions += [a];
 			case definition(d) : newActions += [a[definition= removeSelfReferences(d)]];
 			default : throw "Case <a> forgotten";
